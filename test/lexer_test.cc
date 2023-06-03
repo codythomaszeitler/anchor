@@ -58,3 +58,41 @@ TEST(LexerTest, ItShouldThrowIllegalArgumentExceptionIfColumnNegative)
 
     EXPECT_EQ("Cannot construct location with non-positive column number [-10].", caught_exception_message);
 }
+
+TEST(LexerTest, ItShouldBeAbleToUseCopyConstructor)
+{
+    lexer::Location source(1, 2);
+    lexer::Location target(source);
+
+    EXPECT_EQ(source.getRow(), target.getRow());
+    EXPECT_EQ(source.getColumn(), target.getColumn());
+
+    EXPECT_NE(&source, &target);
+}
+
+TEST(LexerTest, ItShouldBeAbleToDoAssignmentOperation)
+{
+    lexer::Location source(1, 2);
+    lexer::Location target = source;
+
+    EXPECT_EQ(source.getRow(), target.getRow());
+    EXPECT_EQ(source.getColumn(), target.getColumn());
+
+    EXPECT_NE(&source, &target);
+}
+
+TEST(TokenTest, ItShouldBeAbleToCreateToken)
+{
+    lexer::Location start(1, 1);
+    lexer::Location end(1, 5);
+
+    lexer::Token testObject(lexer::TokenType::INTEGER_TYPE, "integer", start, end);
+
+    EXPECT_EQ(lexer::TokenType::INTEGER_TYPE, testObject.getTokenType());
+    EXPECT_EQ("integer", testObject.getRaw());
+
+    EXPECT_EQ(lexer::Location(1,1), testObject.getStart());
+    EXPECT_NE(lexer::Location(1,2), testObject.getStart());
+
+    EXPECT_EQ(lexer::Location(1, 5), testObject.getEnd());
+}

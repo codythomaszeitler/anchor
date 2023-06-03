@@ -8,27 +8,37 @@ namespace lexer
     class Location
     {
     private:
-        int row;
-        int column;
+        const int row;
+        const int column;
 
     public:
         Location(int, int);
-        int getRow();
 
+        int getRow();
         int getColumn();
+
+        bool operator==(const Location&) const;
+        bool operator!=(const Location&) const;
     };
 
-    class TokenType
-    {
-    public:
-        static TokenType INTEGER_TYPE;
+    enum class TokenType {
+        INTEGER_TYPE
     };
 
     class Token
     {
+    private:
+        const lexer::TokenType tokenType;
+        const std::string raw;
+        const lexer::Location start;
+        const lexer::Location end;
+
     public:
         Token(TokenType tokenType, std::string raw, Location start, Location end);
-        bool operator==(const Token &);
+        lexer::TokenType getTokenType() const;        
+        std::string getRaw() const;
+        lexer::Location getStart() const;
+        lexer::Location getEnd() const;
     };
 
     class Lexer
