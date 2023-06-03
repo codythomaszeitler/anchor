@@ -41,7 +41,7 @@ TEST(LexerTest, ItShouldThrowIllegalArgumentExceptionIfRowNegative)
         caught_exception_message = e.what();
     }
 
-    EXPECT_EQ("Cannot construct location with negative row number [-1].", caught_exception_message);
+    EXPECT_EQ("Cannot construct location with non-positive row number [-1].", caught_exception_message);
 }
 
 TEST(LexerTest, ItShouldThrowIllegalArgumentExceptionIfColumnNegative)
@@ -56,5 +56,5 @@ TEST(LexerTest, ItShouldThrowIllegalArgumentExceptionIfColumnNegative)
         caught_exception_message = e.what();
     }
 
-    EXPECT_EQ("Cannot construct location with negative column number [-10].", caught_exception_message);
+    EXPECT_EQ("Cannot construct location with non-positive column number [-10].", caught_exception_message);
 }
