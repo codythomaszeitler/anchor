@@ -2,20 +2,35 @@
 #include "src/lexer.hh"
 #include <stdexcept>
 
-// TEST(LexerTest, ReadInIntegerDecl) {
-//     std::string source = "integer a = 5;";
-//     Lexer testObject(source);
+TEST(LexerTest, ReadInIntegerDecl)
+{
+    std::string source = "integer a = 5;";
+    lexer::Lexer testObject(source);
 
-//     Token integerType = testObject.next();
+    lexer::Token integerTypeToken = testObject.next();
+    EXPECT_EQ(lexer::Token(
+                  lexer::TokenType::INTEGER_TYPE,
+                  "integer",
+                  lexer::Location(1, 1),
+                  lexer::Location(1, 7)),
+              integerTypeToken);
 
-//     Location start(0, 0);
-//     Location end(0, 7);
+    lexer::Token identifier = testObject.next();
+    EXPECT_EQ(lexer::Token(
+                  lexer::TokenType::IDENTIFIER,
+                  "a",
+                  lexer::Location(1, 9),
+                  lexer::Location(1, 9)),
+              identifier);
 
-//     std::string raw = "integer";
-//     Token exp(TokenType::INTEGER_TYPE, raw, start, end);
-
-//     ASSERT_TRUE(exp == integerType);
-// }
+    lexer::Token equals = testObject.next();
+    EXPECT_EQ(lexer::Token(
+                  lexer::TokenType::EQUALS,
+                  "=",
+                  lexer::Location(1, 11),
+                  lexer::Location(1, 11)),
+              equals);
+}
 
 TEST(LexerTest, ItShouldCreateWithRowInfo)
 {
@@ -91,8 +106,8 @@ TEST(TokenTest, ItShouldBeAbleToCreateToken)
     EXPECT_EQ(lexer::TokenType::INTEGER_TYPE, testObject.getTokenType());
     EXPECT_EQ("integer", testObject.getRaw());
 
-    EXPECT_EQ(lexer::Location(1,1), testObject.getStart());
-    EXPECT_NE(lexer::Location(1,2), testObject.getStart());
+    EXPECT_EQ(lexer::Location(1, 1), testObject.getStart());
+    EXPECT_NE(lexer::Location(1, 2), testObject.getStart());
 
     EXPECT_EQ(lexer::Location(1, 5), testObject.getEnd());
 }

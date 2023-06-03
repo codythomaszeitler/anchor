@@ -2,6 +2,7 @@
 #define LEXER_H
 
 #include <string>
+#include <map>
 
 namespace lexer
 {
@@ -22,7 +23,9 @@ namespace lexer
     };
 
     enum class TokenType {
-        INTEGER_TYPE
+        INTEGER_TYPE,
+        IDENTIFIER,
+        EQUALS
     };
 
     class Token
@@ -39,16 +42,27 @@ namespace lexer
         std::string getRaw() const;
         lexer::Location getStart() const;
         lexer::Location getEnd() const;
+
+        bool operator==(const Token&) const;
     };
 
     class Lexer
     {
     private:
+        int position;
         std::string source;
+
+        void chewUpWhitespace();
+
+        lexer::Token parseKeywordOrIdentifier();
+        lexer::Token parseEquals();
+
+        char pop();
+        char peek();
 
     public:
         Lexer(std::string);
-        Token next();
+        lexer::Token next();
     };
 }
 
