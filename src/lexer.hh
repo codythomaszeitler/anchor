@@ -18,16 +18,22 @@ namespace lexer
         int getRow();
         int getColumn();
 
-        bool operator==(const Location&) const;
-        bool operator!=(const Location&) const;
+        bool operator==(const Location &) const;
+        bool operator!=(const Location &) const;
     };
 
-    enum class TokenType {
+    enum class TokenType
+    {
         INTEGER_TYPE,
         INTEGER,
         IDENTIFIER,
         EQUALS,
-        SEMICOLON
+        SEMICOLON,
+        FUNCTION,
+        LEFT_PAREN,
+        RIGHT_PAREN,
+        LEFT_BRACKET,
+        RIGHT_BRACKET
     };
 
     class Token
@@ -40,12 +46,12 @@ namespace lexer
 
     public:
         Token(TokenType tokenType, std::string raw, Location start, Location end);
-        lexer::TokenType getTokenType() const;        
+        lexer::TokenType getTokenType() const;
         std::string getRaw() const;
         lexer::Location getStart() const;
         lexer::Location getEnd() const;
 
-        bool operator==(const Token&) const;
+        bool operator==(const Token &) const;
     };
 
     class Lexer
@@ -59,6 +65,10 @@ namespace lexer
         lexer::Token parseKeywordOrIdentifier();
         lexer::Token parseEquals();
         lexer::Token parseSemicolon();
+        lexer::Token parseLeftParen();
+        lexer::Token parseRightParen();
+        lexer::Token parseLeftBracket();
+        lexer::Token parseRightBracket();
         lexer::Token parseSingleCharacterTokenType(lexer::TokenType tokenType);
         lexer::Token parseNumber();
 
