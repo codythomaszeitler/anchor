@@ -88,6 +88,26 @@ lexer::Token lexer::Lexer::next()
         return this->parseSemicolon();
     }
 
+    if (peek() == '(') 
+    {
+        return this->parseLeftParen();
+    }
+
+    if (peek() == ')') 
+    {
+        return this->parseRightParen();
+    }
+
+    if (peek() == '{')
+    {
+        return this->parseLeftBracket();
+    }
+
+    if (peek() == '}')
+    {
+        return this->parseRightBracket();
+    }
+
     if (isdigit(peek()))
     {
         return this->parseNumber();
@@ -109,6 +129,26 @@ lexer::Token lexer::Lexer::parseEquals()
 lexer::Token lexer::Lexer::parseSemicolon()
 {
     return parseSingleCharacterTokenType(lexer::TokenType::SEMICOLON);
+}
+
+lexer::Token lexer::Lexer::parseLeftParen()
+{
+    return parseSingleCharacterTokenType(lexer::TokenType::LEFT_PAREN);
+}
+
+lexer::Token lexer::Lexer::parseRightParen()
+{
+    return parseSingleCharacterTokenType(lexer::TokenType::RIGHT_PAREN);
+}
+
+lexer::Token lexer::Lexer::parseLeftBracket()
+{
+    return parseSingleCharacterTokenType(lexer::TokenType::LEFT_BRACKET);
+}
+
+lexer::Token lexer::Lexer::parseRightBracket()
+{
+    return parseSingleCharacterTokenType(lexer::TokenType::RIGHT_BRACKET);
 }
 
 lexer::Token lexer::Lexer::parseSingleCharacterTokenType(lexer::TokenType tokenType)
@@ -155,6 +195,10 @@ lexer::Token lexer::Lexer::parseKeywordOrIdentifier()
     if ("integer" == raw)
     {
         return lexer::Token(lexer::TokenType::INTEGER_TYPE, raw, start, end);
+    }
+    if ("function" == raw)
+    {
+        return lexer::Token(lexer::TokenType::FUNCTION, raw, start, end);
     }
     else
     {
