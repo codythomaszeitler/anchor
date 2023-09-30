@@ -4,52 +4,53 @@
 
 TEST(LexerTest, ReadInIntegerDecl)
 {
-    std::string source = "integer a = 535;";
+                        //0123456789
+    std::string source = "val a = 535;";
     lexer::Lexer testObject(source);
 
     lexer::Token integerTypeToken = testObject.next();
     EXPECT_EQ(lexer::Token(
-                  lexer::TokenType::INTEGER_TYPE,
-                  "integer",
+                  lexer::TokenType::VAL,
+                  "val",
                   lexer::Location(0, 0),
-                  lexer::Location(0, 6)),
+                  lexer::Location(0, 2)),
               integerTypeToken);
 
     lexer::Token identifier = testObject.next();
     EXPECT_EQ(lexer::Token(
                   lexer::TokenType::IDENTIFIER,
                   "a",
-                  lexer::Location(0, 8),
-                  lexer::Location(0, 8)),
+                  lexer::Location(0, 4),
+                  lexer::Location(0, 4)),
               identifier);
 
     lexer::Token equals = testObject.next();
     EXPECT_EQ(lexer::Token(
                   lexer::TokenType::EQUALS,
                   "=",
-                  lexer::Location(0, 10),
-                  lexer::Location(0, 10)),
+                  lexer::Location(0, 6),
+                  lexer::Location(0, 6)),
               equals);
 
     lexer::Token numberFive = testObject.next();
     EXPECT_EQ(lexer::Token(
                   lexer::TokenType::INTEGER,
                   "535",
-                  lexer::Location(0, 12),
-                  lexer::Location(0, 14)),
+                  lexer::Location(0, 8),
+                  lexer::Location(0, 10)),
               numberFive);
     lexer::Token semicolon = testObject.next();
     EXPECT_EQ(lexer::Token(
                   lexer::TokenType::SEMICOLON,
                   ";",
-                  lexer::Location(0, 15),
-                  lexer::Location(0, 15)),
+                  lexer::Location(0, 11),
+                  lexer::Location(0, 11)),
               semicolon);
 }
 
 TEST(LexerTest, ReadInVoidFunctionDeclaration)
 {
-    std::string source = "function void foo() {};";
+    std::string source = "function foo() {};";
     lexer::Lexer testObject(source);
 
     lexer::Token functionToken = testObject.next();
@@ -60,59 +61,51 @@ TEST(LexerTest, ReadInVoidFunctionDeclaration)
                   lexer::Location(0, 7)),
               functionToken);
 
-    lexer::Token identifierToken = testObject.next();
-    EXPECT_EQ(lexer::Token(
-                  lexer::TokenType::IDENTIFIER,
-                  "void",
-                  lexer::Location(0, 9),
-                  lexer::Location(0, 12)),
-              identifierToken);
-
     lexer::Token fooToken = testObject.next();
     EXPECT_EQ(lexer::Token(
                   lexer::TokenType::IDENTIFIER,
                   "foo",
-                  lexer::Location(0, 14),
-                  lexer::Location(0, 16)),
+                  lexer::Location(0, 9),
+                  lexer::Location(0, 11)),
               fooToken);
 
     lexer::Token leftParen = testObject.next();
     EXPECT_EQ(lexer::Token(
                   lexer::TokenType::LEFT_PAREN,
                   "(",
-                  lexer::Location(0, 17),
-                  lexer::Location(0, 17)),
+                  lexer::Location(0, 12),
+                  lexer::Location(0, 12)),
               leftParen);
     lexer::Token rightParen = testObject.next();
     EXPECT_EQ(lexer::Token(
                   lexer::TokenType::RIGHT_PAREN,
                   ")",
-                  lexer::Location(0, 18),
-                  lexer::Location(0, 18)),
+                  lexer::Location(0, 13),
+                  lexer::Location(0, 13)),
               rightParen);
 
     lexer::Token leftBracket = testObject.next();
     EXPECT_EQ(lexer::Token(
                   lexer::TokenType::LEFT_BRACKET,
                   "{",
-                  lexer::Location(0, 20),
-                  lexer::Location(0, 20)),
+                  lexer::Location(0, 15),
+                  lexer::Location(0, 15)),
               leftBracket);
 
     lexer::Token rightBracket = testObject.next();
     EXPECT_EQ(lexer::Token(
                   lexer::TokenType::RIGHT_BRACKET,
                   "}",
-                  lexer::Location(0, 21),
-                  lexer::Location(0, 21)),
+                  lexer::Location(0, 16),
+                  lexer::Location(0, 16)),
               rightBracket);
 
     lexer::Token semicolon = testObject.next();
     EXPECT_EQ(lexer::Token(
                   lexer::TokenType::SEMICOLON,
                   ";",
-                  lexer::Location(0, 22),
-                  lexer::Location(0, 22)),
+                  lexer::Location(0, 17),
+                  lexer::Location(0, 17)),
               semicolon);
 }
 

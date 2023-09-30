@@ -27,6 +27,7 @@ namespace lexer
         INTEGER_TYPE,
         INTEGER,
         IDENTIFIER,
+        VAL,
         EQUALS,
         SEMICOLON,
         FUNCTION,

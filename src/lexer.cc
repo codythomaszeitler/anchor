@@ -192,9 +192,9 @@ lexer::Token lexer::Lexer::parseKeywordOrIdentifier()
     }
 
     lexer::Location end(0, this->position - 1);
-    if ("integer" == raw)
+    if ("val" == raw)
     {
-        return lexer::Token(lexer::TokenType::INTEGER_TYPE, raw, start, end);
+        return lexer::Token(lexer::TokenType::VAL, raw, start, end);
     }
     if ("function" == raw)
     {
