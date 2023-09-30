@@ -28,13 +28,15 @@ namespace lexer
         INTEGER,
         IDENTIFIER,
         VAL,
+        PLUS_SIGN,
         EQUALS,
         SEMICOLON,
         FUNCTION,
         LEFT_PAREN,
         RIGHT_PAREN,
         LEFT_BRACKET,
-        RIGHT_BRACKET
+        RIGHT_BRACKET,
+        RETURN
     };
 
     class Token

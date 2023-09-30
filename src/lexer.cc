@@ -88,12 +88,12 @@ lexer::Token lexer::Lexer::next()
         return this->parseSemicolon();
     }
 
-    if (peek() == '(') 
+    if (peek() == '(')
     {
         return this->parseLeftParen();
     }
 
-    if (peek() == ')') 
+    if (peek() == ')')
     {
         return this->parseRightParen();
     }
@@ -106,6 +106,11 @@ lexer::Token lexer::Lexer::next()
     if (peek() == '}')
     {
         return this->parseRightBracket();
+    }
+
+    if (peek() == '+')
+    {
+        return parseSingleCharacterTokenType(lexer::TokenType::PLUS_SIGN);
     }
 
     if (isdigit(peek()))
@@ -196,7 +201,11 @@ lexer::Token lexer::Lexer::parseKeywordOrIdentifier()
     {
         return lexer::Token(lexer::TokenType::VAL, raw, start, end);
     }
-    if ("function" == raw)
+    else if ("return" == raw)
+    {
+        return lexer::Token(lexer::TokenType::RETURN, raw, start, end);
+    }
+    else if ("function" == raw)
     {
         return lexer::Token(lexer::TokenType::FUNCTION, raw, start, end);
     }
