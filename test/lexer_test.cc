@@ -4,7 +4,6 @@
 
 TEST(LexerTest, ReadInIntegerDecl)
 {
-                        //0123456789
     std::string source = "val a = 535;";
     lexer::Lexer testObject(source);
 
@@ -46,6 +45,51 @@ TEST(LexerTest, ReadInIntegerDecl)
                   lexer::Location(0, 11),
                   lexer::Location(0, 11)),
               semicolon);
+}
+
+TEST(LexerTest, ReadInAdditionOfTwoNumbers)
+{
+    std::string source = "3 + 5 + 6";
+    lexer::Lexer testObject(source);
+
+    lexer::Token three = testObject.next();
+    EXPECT_EQ(lexer::Token(
+                  lexer::TokenType::INTEGER,
+                  "3",
+                  lexer::Location(0, 0),
+                  lexer::Location(0, 0)),
+              three);
+
+    lexer::Token plus = testObject.next();
+    EXPECT_EQ(lexer::Token(
+                  lexer::TokenType::PLUS_SIGN,
+                  "+",
+                  lexer::Location(0, 2),
+                  lexer::Location(0, 2)),
+              plus);
+    lexer::Token two = testObject.next();
+    EXPECT_EQ(lexer::Token(
+                  lexer::TokenType::INTEGER,
+                  "5",
+                  lexer::Location(0, 4),
+                  lexer::Location(0, 4)),
+              two);
+
+    lexer::Token secondPlusSign = testObject.next();
+    EXPECT_EQ(lexer::Token(
+                  lexer::TokenType::PLUS_SIGN,
+                  "+",
+                  lexer::Location(0, 6),
+                  lexer::Location(0, 6)),
+              secondPlusSign);
+
+    lexer::Token six = testObject.next();
+    EXPECT_EQ(lexer::Token(
+                  lexer::TokenType::INTEGER,
+                  "6",
+                  lexer::Location(0, 8),
+                  lexer::Location(0, 8)),
+              six);
 }
 
 TEST(LexerTest, ReadInVoidFunctionDeclaration)
@@ -106,6 +150,75 @@ TEST(LexerTest, ReadInVoidFunctionDeclaration)
                   ";",
                   lexer::Location(0, 17),
                   lexer::Location(0, 17)),
+              semicolon);
+}
+
+TEST(LexerTest, ReadInReturnStatementWithNumber)
+{
+    std::string source = "function foo() {return 5;};";
+    lexer::Lexer testObject(source);
+
+    lexer::Token functionToken = testObject.next();
+    EXPECT_EQ(lexer::Token(
+                  lexer::TokenType::FUNCTION,
+                  "function",
+                  lexer::Location(0, 0),
+                  lexer::Location(0, 7)),
+              functionToken);
+
+    lexer::Token fooToken = testObject.next();
+    EXPECT_EQ(lexer::Token(
+                  lexer::TokenType::IDENTIFIER,
+                  "foo",
+                  lexer::Location(0, 9),
+                  lexer::Location(0, 11)),
+              fooToken);
+
+    lexer::Token leftParen = testObject.next();
+    EXPECT_EQ(lexer::Token(
+                  lexer::TokenType::LEFT_PAREN,
+                  "(",
+                  lexer::Location(0, 12),
+                  lexer::Location(0, 12)),
+              leftParen);
+    lexer::Token rightParen = testObject.next();
+    EXPECT_EQ(lexer::Token(
+                  lexer::TokenType::RIGHT_PAREN,
+                  ")",
+                  lexer::Location(0, 13),
+                  lexer::Location(0, 13)),
+              rightParen);
+
+    lexer::Token leftBracket = testObject.next();
+    EXPECT_EQ(lexer::Token(
+                  lexer::TokenType::LEFT_BRACKET,
+                  "{",
+                  lexer::Location(0, 15),
+                  lexer::Location(0, 15)),
+              leftBracket);
+
+    lexer::Token returnToken = testObject.next();
+    EXPECT_EQ(lexer::Token(
+                  lexer::TokenType::RETURN,
+                  "return",
+                  lexer::Location(0, 16),
+                  lexer::Location(0, 21)),
+              returnToken);
+
+    lexer::Token five = testObject.next();
+    EXPECT_EQ(lexer::Token(
+                  lexer::TokenType::INTEGER,
+                  "5",
+                  lexer::Location(0, 23),
+                  lexer::Location(0, 23)),
+              five);
+
+    lexer::Token semicolon = testObject.next();
+    EXPECT_EQ(lexer::Token(
+                  lexer::TokenType::SEMICOLON,
+                  ";",
+                  lexer::Location(0, 24),
+                  lexer::Location(0, 24)),
               semicolon);
 }
 
