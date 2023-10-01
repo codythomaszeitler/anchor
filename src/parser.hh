@@ -7,68 +7,93 @@
 #include <deque>
 #include <memory>
 
-namespace parser {
-    class Stmt {
-
+namespace parser
+{
+    enum class StmtType
+    {
+        FUNCTION,
+        RETURN
     };
 
-    class Expr {
-
+    class Stmt
+    {
+    public:
+        parser::StmtType type;
     };
 
-    class FunctionStmt : public Stmt {
+    class Expr
+    {
+    };
+
+    class FunctionStmt : public Stmt
+    {
     public:
         std::string identifier;
-        std::vector<std::unique_ptr<Stmt>> stmts;
+        std::vector<std::shared_ptr<Stmt>> stmts;
     };
 
-    class ReturnStmt : public Stmt {
+    class ReturnStmt : public Stmt
+    {
     public:
-        ReturnStmt(std::unique_ptr<Expr>);
-        std::unique_ptr<Expr> expr;
+        ReturnStmt(std::shared_ptr<Expr>);
+        std::shared_ptr<Expr> expr;
     };
 
-    class IntegerLiteral : public Expr {
+    class IntegerLiteral : public Expr
+    {
     public:
         int integer;
     };
 
-    enum class Operation {
+    enum class Operation
+    {
         ADD
     };
 
-    class BinaryOperation : public Expr {
+    class BinaryOperation : public Expr
+    {
 
     public:
-        std::unique_ptr<parser::Expr> left;
+        std::shared_ptr<parser::Expr> left;
         parser::Operation operation;
-        std::unique_ptr<parser::Expr> right;
+        std::shared_ptr<parser::Expr> right;
     };
 
-    class Parser 
+    class Program : public Stmt
+    {
+    public:
+        std::vector<std::shared_ptr<Stmt>> stmts;
+        template <typename T>
+        std::shared_ptr<T> get(int index)
+        {
+            return std::static_pointer_cast<T>(this->stmts.at(index));
+        }
+    };
+
+    class Parser
     {
     private:
         std::deque<lexer::Token> tokens;
 
         std::vector<std::string> args();
         std::string identifier();
-        std::vector<std::unique_ptr<Stmt>> block();
-        std::unique_ptr<Stmt> stmt();
-        std::unique_ptr<Stmt> functionStmt();
-        std::unique_ptr<parser::Expr> expr();
+        std::vector<std::shared_ptr<Stmt>> block();
+        std::shared_ptr<Stmt> stmt();
+        std::shared_ptr<Stmt> functionStmt();
+        std::shared_ptr<parser::Expr> expr();
 
-        std::unique_ptr<parser::Expr> parseInteger();
+        std::shared_ptr<parser::Expr> parseInteger();
         parser::Operation parseOperation();
-        std::unique_ptr<parser::Expr> parseBinaryOperation();
+        std::shared_ptr<parser::Expr> parseBinaryOperation();
 
         lexer::Token peek();
         lexer::Token pop();
         void consume(lexer::TokenType);
+
     public:
         Parser(std::deque<lexer::Token>);
-        std::vector<std::unique_ptr<Stmt>> parse();
+        parser::Program parse();
     };
 };
-
 
 #endif // !PARSER_H

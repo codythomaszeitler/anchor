@@ -7,28 +7,32 @@
 #include <memory>
 #include <iostream>
 #include <string>
+#include <algorithm>
 
 namespace parser
 {
-    ReturnStmt::ReturnStmt(std::unique_ptr<Expr> expr) : expr(std::move(expr))
+    ReturnStmt::ReturnStmt(std::shared_ptr<Expr> expr) : expr(std::move(expr))
     {
     }
-
+    
     Parser::Parser(std::deque<lexer::Token> tokens) : tokens(tokens)
     {
     }
 
-    std::vector<std::unique_ptr<Stmt>> Parser::parse()
+    parser::Program Parser::parse()
     {
-       std::vector<std::unique_ptr<Stmt>> stmts;
+        std::vector<std::shared_ptr<Stmt>> stmts;
         while (!this->tokens.empty())
         {
             stmts.push_back(this->stmt());
         }
-        return stmts;
+
+        parser::Program program;
+        program.stmts = stmts;
+        return program;
     };
 
-    std::unique_ptr<Stmt> Parser::stmt()
+    std::shared_ptr<Stmt> Parser::stmt()
     {
         lexer::Token maybeReturnOrFunctionDefinition = this->peek();
 
@@ -36,7 +40,9 @@ namespace parser
         {
             this->consume(lexer::TokenType::RETURN);
 
-            std::unique_ptr<parser::Stmt> returnStmt(new parser::ReturnStmt(this->expr()));
+            parser::ReturnStmt* returnStmtPointer = new parser::ReturnStmt(this->expr());
+            returnStmtPointer->type = parser::StmtType::RETURN;
+            std::shared_ptr<parser::Stmt> returnStmt(returnStmtPointer);
             this->consume(lexer::TokenType::SEMICOLON);
             return returnStmt;
         }
@@ -46,7 +52,7 @@ namespace parser
         }
     }
 
-    std::unique_ptr<Stmt> Parser::functionStmt()
+    std::shared_ptr<Stmt> Parser::functionStmt()
     {
         this->consume(lexer::TokenType::FUNCTION);
         std::string identifier = this->identifier();
@@ -54,10 +60,11 @@ namespace parser
         this->args();
 
         parser::FunctionStmt *functionStmt = new parser::FunctionStmt();
+        functionStmt->type = parser::StmtType::FUNCTION;
         functionStmt->stmts = this->block();
         functionStmt->identifier = identifier;
         this->consume(lexer::TokenType::SEMICOLON);
-        return std::unique_ptr<Stmt>(functionStmt);
+        return std::shared_ptr<Stmt>(functionStmt);
     }
 
     std::string Parser::identifier()
@@ -73,10 +80,10 @@ namespace parser
         return std::vector<std::string>();
     }
 
-    std::vector<std::unique_ptr<Stmt>> Parser::block()
+    std::vector<std::shared_ptr<Stmt>> Parser::block()
     {
         this->consume(lexer::TokenType::LEFT_BRACKET);
-        std::vector<std::unique_ptr<Stmt>> stmts;
+        std::vector<std::shared_ptr<Stmt>> stmts;
 
         while (this->peek().getTokenType() != lexer::TokenType::RIGHT_BRACKET)
         {
@@ -108,19 +115,19 @@ namespace parser
         return this->tokens.front();
     }
 
-    std::unique_ptr<parser::Expr> Parser::expr()
+    std::shared_ptr<parser::Expr> Parser::expr()
     {
         return this->parseBinaryOperation();
     }
 
-    std::unique_ptr<parser::Expr> Parser::parseInteger()
+    std::shared_ptr<parser::Expr> Parser::parseInteger()
     {
         lexer::Token integerToken = this->pop();
         std::string intAsString = integerToken.getRaw();
 
-        parser::IntegerLiteral* integerLiteral = new parser::IntegerLiteral();
+        parser::IntegerLiteral *integerLiteral = new parser::IntegerLiteral();
         integerLiteral->integer = stoi(intAsString);
-        return std::unique_ptr<parser::Expr>(integerLiteral);
+        return std::shared_ptr<parser::Expr>(integerLiteral);
     }
 
     parser::Operation Parser::parseOperation()
@@ -129,12 +136,12 @@ namespace parser
         return parser::Operation::ADD;
     }
 
-    std::unique_ptr<parser::Expr> Parser::parseBinaryOperation()
+    std::shared_ptr<parser::Expr> Parser::parseBinaryOperation()
     {
         parser::BinaryOperation *binaryOperation = new parser::BinaryOperation();
         binaryOperation->left = this->parseInteger();
         binaryOperation->operation = this->parseOperation();
         binaryOperation->right = this->parseInteger();
-        return std::unique_ptr<parser::Expr>(binaryOperation);
+        return std::shared_ptr<parser::Expr>(binaryOperation);
     }
 }

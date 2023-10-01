@@ -9,7 +9,13 @@ TEST(ParserTest, ItShouldParseFunctionDefinition) {
 
     parser::Parser testObject(tokens);
 
-    std::vector<std::unique_ptr<parser::Stmt>> stmts = testObject.parse();
+    parser::Program program = testObject.parse();
 
-    EXPECT_EQ(1, stmts.size());
+    EXPECT_EQ(1, program.stmts.size());
+
+    std::shared_ptr<parser::FunctionStmt> functionStmt = program.get<parser::FunctionStmt>(0);
+    EXPECT_EQ("foo", functionStmt->identifier);
+    EXPECT_EQ(parser::StmtType::FUNCTION, functionStmt.get()->type);
+
+    EXPECT_EQ(1, functionStmt->stmts.size());
 }
