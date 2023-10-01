@@ -3,6 +3,8 @@
 
 #include <string>
 #include <map>
+#include <vector>
+#include <deque>
 
 namespace lexer
 {
@@ -75,13 +77,17 @@ namespace lexer
         lexer::Token parseSingleCharacterTokenType(lexer::TokenType tokenType);
         lexer::Token parseNumber();
 
-        char pop();
-        char peek();
+        char popChar();
+        char peekChar();
 
     public:
         Lexer(std::string);
         lexer::Token next();
+        bool hasNext();
     };
+
+    std::deque<lexer::Token> lex(std::string);
 }
+
 
 #endif
