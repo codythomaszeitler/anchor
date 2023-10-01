@@ -78,47 +78,47 @@ lexer::Token lexer::Lexer::next()
 {
     this->chewUpWhitespace();
 
-    if (peek() == '=')
+    if (peekChar() == '=')
     {
         return this->parseEquals();
     }
 
-    if (peek() == ';')
+    if (peekChar() == ';')
     {
         return this->parseSemicolon();
     }
 
-    if (peek() == '(')
+    if (peekChar() == '(')
     {
         return this->parseLeftParen();
     }
 
-    if (peek() == ')')
+    if (peekChar() == ')')
     {
         return this->parseRightParen();
     }
 
-    if (peek() == '{')
+    if (peekChar() == '{')
     {
         return this->parseLeftBracket();
     }
 
-    if (peek() == '}')
+    if (peekChar() == '}')
     {
         return this->parseRightBracket();
     }
 
-    if (peek() == '+')
+    if (peekChar() == '+')
     {
         return parseSingleCharacterTokenType(lexer::TokenType::PLUS_SIGN);
     }
 
-    if (isdigit(peek()))
+    if (isdigit(peekChar()))
     {
         return this->parseNumber();
     }
 
-    if (isalpha(peek()))
+    if (isalpha(peekChar()))
     {
         return this->parseKeywordOrIdentifier();
     }
@@ -159,7 +159,7 @@ lexer::Token lexer::Lexer::parseRightBracket()
 lexer::Token lexer::Lexer::parseSingleCharacterTokenType(lexer::TokenType tokenType)
 {
     lexer::Location start = lexer::Location(0, this->position);
-    std::string raw(1, pop());
+    std::string raw(1, popChar());
 
     return lexer::Token(
         tokenType,
@@ -173,9 +173,9 @@ lexer::Token lexer::Lexer::parseNumber()
     std::string raw = "";
 
     lexer::Location start(0, this->position);
-    while (isdigit(peek()))
+    while (isdigit(peekChar()))
     {
-        raw += pop();
+        raw += popChar();
     }
 
     lexer::Location end(0, this->position - 1);
@@ -191,9 +191,9 @@ lexer::Token lexer::Lexer::parseKeywordOrIdentifier()
     std::string raw = "";
 
     lexer::Location start(0, this->position);
-    while (isalnum(peek()))
+    while (isalnum(peekChar()))
     {
-        raw += pop();
+        raw += popChar();
     }
 
     lexer::Location end(0, this->position - 1);
@@ -215,22 +215,39 @@ lexer::Token lexer::Lexer::parseKeywordOrIdentifier()
     }
 }
 
-char lexer::Lexer::pop()
+char lexer::Lexer::popChar()
 {
-    char current = this->peek();
+    char current = this->peekChar();
     this->position++;
     return current;
 }
 
-char lexer::Lexer::peek()
+char lexer::Lexer::peekChar()
 {
     return this->source[this->position];
 }
 
 void lexer::Lexer::chewUpWhitespace()
 {
-    while (isspace(peek()))
+    while (isspace(peekChar()))
     {
-        pop();
+        popChar();
+    }
+}
+namespace lexer
+{
+    bool Lexer::hasNext()
+    {
+        return this->source.length() != this->position;
+    }
+
+    std::deque<Token> lex(std::string a)
+    {
+        lexer::Lexer lexer(a);
+        std::deque<Token> tokens;
+        while (lexer.hasNext()) {
+            tokens.push_back(lexer.next());
+        }
+        return tokens;
     }
 }

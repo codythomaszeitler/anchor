@@ -23,8 +23,10 @@ enable_testing()
 add_executable(
     main_test
     ${PROJECT_SOURCE_DIR}/src/lexer.cc
+    ${PROJECT_SOURCE_DIR}/src/parser.cc
     ${PROJECT_SOURCE_DIR}/test/main_test.cc
     ${PROJECT_SOURCE_DIR}/test/lexer_test.cc
+    ${PROJECT_SOURCE_DIR}/test/parser_test.cc
 )
 
 target_link_libraries(

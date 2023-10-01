@@ -14,6 +14,7 @@ TEST(LexerTest, ReadInIntegerDecl)
                   lexer::Location(0, 0),
                   lexer::Location(0, 2)),
               integerTypeToken);
+    EXPECT_TRUE(testObject.hasNext());
 
     lexer::Token identifier = testObject.next();
     EXPECT_EQ(lexer::Token(
@@ -23,6 +24,7 @@ TEST(LexerTest, ReadInIntegerDecl)
                   lexer::Location(0, 4)),
               identifier);
 
+    EXPECT_TRUE(testObject.hasNext());
     lexer::Token equals = testObject.next();
     EXPECT_EQ(lexer::Token(
                   lexer::TokenType::EQUALS,
@@ -31,6 +33,7 @@ TEST(LexerTest, ReadInIntegerDecl)
                   lexer::Location(0, 6)),
               equals);
 
+    EXPECT_TRUE(testObject.hasNext());
     lexer::Token numberFive = testObject.next();
     EXPECT_EQ(lexer::Token(
                   lexer::TokenType::INTEGER,
@@ -38,6 +41,7 @@ TEST(LexerTest, ReadInIntegerDecl)
                   lexer::Location(0, 8),
                   lexer::Location(0, 10)),
               numberFive);
+    EXPECT_TRUE(testObject.hasNext());
     lexer::Token semicolon = testObject.next();
     EXPECT_EQ(lexer::Token(
                   lexer::TokenType::SEMICOLON,
@@ -45,6 +49,7 @@ TEST(LexerTest, ReadInIntegerDecl)
                   lexer::Location(0, 11),
                   lexer::Location(0, 11)),
               semicolon);
+    EXPECT_FALSE(testObject.hasNext());
 }
 
 TEST(LexerTest, ReadInAdditionOfTwoNumbers)
