@@ -82,6 +82,17 @@ namespace llvm
     {
         I32
     };
+
+
+    class Writer {
+    private:
+        std::string write(llvm::Type);
+    
+    public:
+        std::string write(llvm::Program);
+        std::string write(std::shared_ptr<llvm::AddInstruction>);
+        std::string write(std::shared_ptr<llvm::RetInstruction>);
+    };
 }
 
 #endif // __LLVM_H__
