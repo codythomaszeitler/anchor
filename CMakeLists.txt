@@ -16,7 +16,7 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-add_executable(main ${PROJECT_SOURCE_DIR}/src/main.cc ${PROJECT_SOURCE_DIR}/src/lexer.cc)
+add_executable(main ${PROJECT_SOURCE_DIR}/src/main.cc ${PROJECT_SOURCE_DIR}/src/lexer.cc ${PROJECT_SOURCE_DIR}/src/llvm.cc)
 
 enable_testing()
 
@@ -24,9 +24,11 @@ add_executable(
     main_test
     ${PROJECT_SOURCE_DIR}/src/lexer.cc
     ${PROJECT_SOURCE_DIR}/src/parser.cc
+    ${PROJECT_SOURCE_DIR}/src/llvm.cc
     ${PROJECT_SOURCE_DIR}/test/main_test.cc
     ${PROJECT_SOURCE_DIR}/test/lexer_test.cc
     ${PROJECT_SOURCE_DIR}/test/parser_test.cc
+    ${PROJECT_SOURCE_DIR}/test/llvm_test.cc
 )
 
 target_link_libraries(

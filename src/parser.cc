@@ -14,7 +14,7 @@ namespace parser
     ReturnStmt::ReturnStmt(std::shared_ptr<Expr> expr) : expr(std::move(expr))
     {
     }
-    
+
     Parser::Parser(std::deque<lexer::Token> tokens) : tokens(tokens)
     {
     }
@@ -40,7 +40,7 @@ namespace parser
         {
             this->consume(lexer::TokenType::RETURN);
 
-            parser::ReturnStmt* returnStmtPointer = new parser::ReturnStmt(this->expr());
+            parser::ReturnStmt *returnStmtPointer = new parser::ReturnStmt(this->expr());
             returnStmtPointer->type = parser::StmtType::RETURN;
             std::shared_ptr<parser::Stmt> returnStmt(returnStmtPointer);
             this->consume(lexer::TokenType::SEMICOLON);
@@ -120,6 +120,16 @@ namespace parser
         return this->parseBinaryOperation();
     }
 
+    std::shared_ptr<parser::Expr> Parser::parseBinaryOperation()
+    {
+        parser::BinaryOperation *binaryOperation = new parser::BinaryOperation();
+        binaryOperation->left = this->parseInteger();
+        binaryOperation->operation = this->parseOperation();
+        binaryOperation->right = this->parseInteger();
+        binaryOperation->type = parser::ExprType::BINARY_OP;
+        return std::shared_ptr<parser::Expr>(binaryOperation);
+    }
+
     std::shared_ptr<parser::Expr> Parser::parseInteger()
     {
         lexer::Token integerToken = this->pop();
@@ -127,6 +137,7 @@ namespace parser
 
         parser::IntegerLiteral *integerLiteral = new parser::IntegerLiteral();
         integerLiteral->integer = stoi(intAsString);
+        integerLiteral->type = parser::ExprType::INTEGER_LITERAL;
         return std::shared_ptr<parser::Expr>(integerLiteral);
     }
 
@@ -134,14 +145,5 @@ namespace parser
     {
         lexer::Token plus = this->pop();
         return parser::Operation::ADD;
-    }
-
-    std::shared_ptr<parser::Expr> Parser::parseBinaryOperation()
-    {
-        parser::BinaryOperation *binaryOperation = new parser::BinaryOperation();
-        binaryOperation->left = this->parseInteger();
-        binaryOperation->operation = this->parseOperation();
-        binaryOperation->right = this->parseInteger();
-        return std::shared_ptr<parser::Expr>(binaryOperation);
     }
 }

@@ -21,8 +21,15 @@ namespace parser
         parser::StmtType type;
     };
 
+    enum class ExprType {
+        BINARY_OP,
+        INTEGER_LITERAL
+    };
+
     class Expr
     {
+    public:
+        parser::ExprType type;
     };
 
     class FunctionStmt : public Stmt
