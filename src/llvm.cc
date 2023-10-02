@@ -31,7 +31,7 @@ namespace llvm
                         std::shared_ptr<llvm::RetInstruction> retInstruction(new llvm::RetInstruction());
                         retInstruction->irType = llvm::InstructionType::RET;
                         retInstruction->type = llvm::Type::I32;
-                        retInstruction->inputIdentifier = "0";
+                        retInstruction->inputIdentifier = "1";
                         instructions.push_back(retInstruction);
 
                         llvmFunction->instructions = instructions;
@@ -59,7 +59,7 @@ namespace llvm
             addInstruction->left = left->integer;
             addInstruction->right = right->integer;
             addInstruction->type = llvm::Type::I32;
-            addInstruction->outputIdentifier = "0";
+            addInstruction->outputIdentifier = "1";
 
             instructions.push_back(addInstruction);
         }

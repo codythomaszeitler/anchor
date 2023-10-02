@@ -23,17 +23,17 @@ TEST(LlvmTest, ItShouldConvertFunctionIntoLlvm)
 
     EXPECT_EQ(3, addInstruction->left);
     EXPECT_EQ(5, addInstruction->right);
-    EXPECT_EQ("0", addInstruction->outputIdentifier);
+    EXPECT_EQ("1", addInstruction->outputIdentifier);
     EXPECT_EQ(llvm::Type::I32, addInstruction->type);
 
     std::shared_ptr<llvm::RetInstruction> returnInstruction = llvmFunction->getInstruction<llvm::RetInstruction>(1);
     EXPECT_EQ(llvm::Type::I32, returnInstruction->type);
-    EXPECT_EQ("0", returnInstruction->inputIdentifier);
+    EXPECT_EQ("1", returnInstruction->inputIdentifier);
 
     std::string expected = "";
     expected.append("define i32 @foo() #0 {\n");
-    expected.append("  %0 = add i32 3, 5\n");
-    expected.append("  ret i32 %0\n");
+    expected.append("  %1 = add i32 3, 5\n");
+    expected.append("  ret i32 %1\n");
     expected.append("}\n");
 
     llvm::Writer writer;
@@ -48,13 +48,13 @@ TEST(LlvmTest, ItShouldBeAbleToConvertAnAddInstructionIntoString)
     addInstr->irType = llvm::InstructionType::ADD;
     addInstr->left = 3;
     addInstr->right = 5;
-    addInstr->outputIdentifier = "0";
+    addInstr->outputIdentifier = "1";
     addInstr->type = llvm::Type::I32;
 
     llvm::Writer testObject;
     std::string output = testObject.write(addInstr);
 
-    EXPECT_EQ("%0 = add i32 3, 5", output);
+    EXPECT_EQ("%1 = add i32 3, 5", output);
 }
 
 TEST(LlvmTest, ItShouldBeAbleToConvertARetInstructionIntoString) 
@@ -63,10 +63,10 @@ TEST(LlvmTest, ItShouldBeAbleToConvertARetInstructionIntoString)
     std::shared_ptr<llvm::RetInstruction> retInstr(new llvm::RetInstruction());
     retInstr->irType = llvm::InstructionType::RET;
     retInstr->type = llvm::Type::I32;
-    retInstr->inputIdentifier = "0";
+    retInstr->inputIdentifier = "1";
 
     llvm::Writer testObject;
     std::string output = testObject.write(retInstr);
 
-    EXPECT_EQ("ret i32 %0", output);
+    EXPECT_EQ("ret i32 %1", output);
 }

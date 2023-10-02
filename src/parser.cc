@@ -22,7 +22,7 @@ namespace parser
     parser::Program Parser::parse()
     {
         std::vector<std::shared_ptr<Stmt>> stmts;
-        while (!this->tokens.empty())
+        while (this->tokens.size() != 0)
         {
             stmts.push_back(this->stmt());
         }
