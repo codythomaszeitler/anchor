@@ -113,6 +113,11 @@ lexer::Token lexer::Lexer::next()
         return parseSingleCharacterTokenType(lexer::TokenType::PLUS_SIGN);
     }
 
+    if (peekChar() == '"') 
+    {
+        return this->parseRawStringLiteral();
+    }
+
     if (isdigit(peekChar()))
     {
         return this->parseNumber();
@@ -186,6 +191,25 @@ lexer::Token lexer::Lexer::parseNumber()
         end);
 }
 
+lexer::Token lexer::Lexer::parseRawStringLiteral()
+{
+    lexer::Location start(0, this->position);
+
+    std::string raw(1, this->popChar());
+    while (this->peekChar() != '"') {
+        raw += this->popChar();
+    }
+    // should be a "" 
+    raw.push_back(this->popChar());
+
+    lexer::Location end(0, this->position - 1);
+    return lexer::Token(
+        lexer::TokenType::STRING,
+        raw,
+        start,
+        end);
+}
+
 lexer::Token lexer::Lexer::parseKeywordOrIdentifier()
 {
     std::string raw = "";
@@ -208,6 +232,10 @@ lexer::Token lexer::Lexer::parseKeywordOrIdentifier()
     else if ("function" == raw)
     {
         return lexer::Token(lexer::TokenType::FUNCTION, raw, start, end);
+    }
+    else if ("print" == raw)
+    {
+        return lexer::Token(lexer::TokenType::PRINT, raw, start, end);
     }
     else
     {

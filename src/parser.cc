@@ -14,6 +14,10 @@ namespace parser
     ReturnStmt::ReturnStmt(std::shared_ptr<Expr> expr) : expr(std::move(expr))
     {
     }
+    
+    PrintStmt::PrintStmt(std::shared_ptr<Expr> expr) : expr(std::move(expr))
+    {
+    }
 
     Parser::Parser(std::deque<lexer::Token> tokens) : tokens(tokens)
     {
@@ -45,6 +49,20 @@ namespace parser
             std::shared_ptr<parser::Stmt> returnStmt(returnStmtPointer);
             this->consume(lexer::TokenType::SEMICOLON);
             return returnStmt;
+        }
+        else if (maybeReturnOrFunctionDefinition.getTokenType() == lexer::TokenType::PRINT) 
+        {
+            this->consume(lexer::TokenType::PRINT);
+
+            this->consume(lexer::TokenType::LEFT_PAREN);
+            parser::PrintStmt *printStmtPointer = new parser::PrintStmt(this->expr());
+            printStmtPointer->type = parser::StmtType::PRINT;
+            this->consume(lexer::TokenType::RIGHT_PAREN);
+
+            std::shared_ptr<parser::Stmt> printStmt(printStmtPointer);
+            this->consume(lexer::TokenType::SEMICOLON);
+
+            return printStmt;
         }
         else
         {
@@ -117,7 +135,21 @@ namespace parser
 
     std::shared_ptr<parser::Expr> Parser::expr()
     {
-        return this->parseBinaryOperation();
+        lexer::Token peeked = this->peek();
+        if (peeked.getTokenType() == lexer::TokenType::STRING) {
+            return this->parseStringLiteral();
+        } else {
+            return this->parseBinaryOperation();
+        }
+    }
+    
+    std::shared_ptr<parser::Expr> Parser::parseStringLiteral()
+    {
+        lexer::Token popped = this->pop();
+        parser::StringLiteral* stringLiteral = new parser::StringLiteral();
+        stringLiteral->literal = popped.getRaw().substr(1, popped.getRaw().length() - 2);
+        stringLiteral->type = parser::ExprType::STRING_LITERAL;
+        return std::shared_ptr<parser::Expr>(stringLiteral);
     }
 
     std::shared_ptr<parser::Expr> Parser::parseBinaryOperation()
