@@ -1,0 +1,1 @@
+pbpaste | sed 's/,//g' | tr -s ' \n' | while read line; do echo map[$line] = \"$line\"\;; done
