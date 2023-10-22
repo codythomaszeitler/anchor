@@ -8,6 +8,9 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include "util.hh"
+#include <map>
+#include <string_view>
 
 namespace parser
 {
@@ -17,6 +20,59 @@ namespace parser
 
     PrintStmt::PrintStmt(std::shared_ptr<Expr> expr) : expr(std::move(expr))
     {
+    }
+
+    std::string InvalidSyntaxException::parseMessage(lexer::Token offender, std::vector<lexer::TokenType> expected)
+    {
+        auto asString = [](std::vector<lexer::TokenType> expected)
+        {
+            std::vector<std::string> tokenTypeToStrings;
+            for (auto &tokenType : expected)
+            {
+                tokenTypeToStrings.push_back(lexer::tostring(tokenType));
+            }
+            return util::join(tokenTypeToStrings.begin(), tokenTypeToStrings.end(), ", ");
+        };
+
+        if (expected.empty())
+        {
+            throw std::invalid_argument("Cannot construct InvalidSyntaxException with empty list of expected tokens types.");
+        }
+
+        if (std::find(expected.begin(), expected.end(), offender.getTokenType()) != expected.end())
+        {
+            throw std::invalid_argument("Cannot construct InvalidSyntaxException where expected tokens contains offender " + lexer::tostring(offender.getTokenType()) + " [" + asString(expected) + "].");
+        }
+
+        return "Expected: " + asString(expected) + " at line " + std::to_string(offender.getStart().getRow()) + ", column " + std::to_string(offender.getStart().getColumn()) + ", but found \"" + offender.getRaw() + "\".";
+    }
+
+    InvalidSyntaxException::InvalidSyntaxException(lexer::Token offender, std::vector<lexer::TokenType> expected) : std::runtime_error(parser::InvalidSyntaxException::parseMessage(offender, expected)), offender(offender), expected(expected)
+    {
+    }
+
+    const char *InvalidSyntaxException::what() const throw()
+    {
+        return std::runtime_error::what();
+    }
+
+    ErrorLog::ErrorLog(lexer::Token offender, std::vector<lexer::TokenType> expected) : offender(offender), expected(expected)
+    {
+    }
+
+    std::string ErrorLog::message()
+    {
+        return "";
+    }
+
+    bool Program::isSyntacticallyCorrect()
+    {
+        return true;
+    }
+
+    std::vector<parser::ErrorLog> Program::errors()
+    {
+        return std::vector<parser::ErrorLog>();
     }
 
     Parser::Parser(std::deque<lexer::Token> tokens) : tokens(tokens)
@@ -57,6 +113,7 @@ namespace parser
     std::shared_ptr<Stmt> Parser::functionStmt()
     {
         this->consume(lexer::TokenType::FUNCTION);
+
         std::string identifier = this->identifier();
 
         this->args();
@@ -124,10 +181,13 @@ namespace parser
 
     void Parser::consume(lexer::TokenType tokenType)
     {
-        lexer::Token consumed = this->pop();
+        lexer::Token consumed = this->peek();
         if (consumed.getTokenType() != tokenType)
         {
-            std::cout << "Someone somewhere did not have the correct token..." << std::endl;
+        }
+        else
+        {
+            this->pop();
         }
     }
 
