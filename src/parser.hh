@@ -103,6 +103,7 @@ namespace parser
         std::shared_ptr<Stmt> stmt();
         std::shared_ptr<Stmt> functionStmt();
         std::shared_ptr<Stmt> printStmt();
+        std::shared_ptr<Stmt> returnStmt();
         std::shared_ptr<parser::Expr> expr();
 
         std::shared_ptr<parser::Expr> parseStringLiteral();
