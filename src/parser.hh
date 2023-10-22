@@ -13,7 +13,8 @@ namespace parser
     {
         FUNCTION,
         RETURN,
-        PRINT
+        PRINT,
+        BAD
     };
 
     class Stmt
@@ -81,6 +82,26 @@ namespace parser
         std::shared_ptr<parser::Expr> right;
     };
 
+    class InvalidSyntaxException : public std::runtime_error {
+    private:
+        lexer::Token offender;
+        std::vector<lexer::TokenType> expected;
+        static std::string parseMessage(lexer::Token offender, std::vector<lexer::TokenType> expected);
+    public:
+        InvalidSyntaxException(lexer::Token offender, std::vector<lexer::TokenType> expected);        
+        virtual const char* what() const throw();
+    };
+
+    class ErrorLog 
+    {
+    private:
+        lexer::Token offender;
+        std::vector<lexer::TokenType> expected;
+    public:
+        ErrorLog(lexer::Token offender, std::vector<lexer::TokenType> expected); 
+        std::string message();
+    };
+
     class Program : public Stmt
     {
     public:
@@ -90,6 +111,9 @@ namespace parser
         {
             return std::static_pointer_cast<T>(this->stmts.at(index));
         }
+
+        bool isSyntacticallyCorrect();
+        std::vector<parser::ErrorLog> errors();
     };
 
     class Parser

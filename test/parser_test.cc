@@ -42,8 +42,8 @@ TEST(ParserTest, ItShouldBeAbleToParserMainWithAPrint)
 
     EXPECT_EQ(parser::StmtType::PRINT, printStmt->type);
 
-    parser::PrintStmt* printStmtPointer = (parser::PrintStmt*) printStmt.get(); 
-    parser::StringLiteral* stringLiteralPointer = (parser::StringLiteral*) printStmtPointer->expr.get();
+    parser::PrintStmt *printStmtPointer = (parser::PrintStmt *)printStmt.get();
+    parser::StringLiteral *stringLiteralPointer = (parser::StringLiteral *)printStmtPointer->expr.get();
 
     EXPECT_EQ(stringLiteralPointer->type, parser::ExprType::STRING_LITERAL);
     EXPECT_EQ("Hello, World!", stringLiteralPointer->literal);
@@ -70,9 +70,85 @@ TEST(ParserTest, ItShouldBeAbleToParserPrintWithEmptyStringBody)
 
     EXPECT_EQ(parser::StmtType::PRINT, printStmt->type);
 
-    parser::PrintStmt* printStmtPointer = (parser::PrintStmt*) printStmt.get(); 
-    parser::StringLiteral* stringLiteralPointer = (parser::StringLiteral*) printStmtPointer->expr.get();
+    parser::PrintStmt *printStmtPointer = (parser::PrintStmt *)printStmt.get();
+    parser::StringLiteral *stringLiteralPointer = (parser::StringLiteral *)printStmtPointer->expr.get();
 
     EXPECT_EQ(stringLiteralPointer->type, parser::ExprType::STRING_LITERAL);
     EXPECT_EQ("", stringLiteralPointer->literal);
+}
+
+// TEST(ParserTest, ItShouldBeAbleToPrintAndRecoverFromBadStmt)
+// {
+//     std::string sourceCode =
+//     R"(
+//     function main() {
+//         print("Hello World!");
+//         var a = 5 a+ 3;
+//         print("Meow, mix!");
+//     })";
+
+//     std::deque<lexer::Token> tokens = lexer::lex(sourceCode);
+
+//     parser::Parser testObject(tokens);
+//     parser::Program program = testObject.parse();
+
+//     EXPECT_EQ(1, program.stmts.size());
+//     EXPECT_FALSE(program.isSyntacticallyCorrect());
+
+//     std::vector<parser::ErrorLog> errors = program.errors();
+
+//     EXPECT_EQ(1, errors.size());
+
+//     parser::ErrorLog error = errors[0];
+//     EXPECT_EQ("Expected BINARY_OPERATOR or SEMICOLON at line 3, column 15, found \"a\".", error.message());
+// }
+
+TEST(ParserTest, ItShouldBeAbleToConstructAnInvalidSyntaxException)
+{
+    lexer::Token offender(lexer::TokenType::EQUALS, "=", lexer::Location(1, 1), lexer::Location(1, 2));
+    std::vector<lexer::TokenType> expected{lexer::TokenType::FUNCTION};
+
+    parser::InvalidSyntaxException ise(offender, expected);
+
+    EXPECT_STREQ("Expected: FUNCTION at line 1, column 1, but found \"=\".", ise.what());
+}
+
+TEST(ParserTest, ItShouldNotBeAbleToConstructAnISEWithoutExpectedTokenTypes)
+{
+    lexer::Token offender(lexer::TokenType::EQUALS, "=", lexer::Location(1, 1), lexer::Location(1, 2));
+    std::vector<lexer::TokenType> expected;
+
+    try
+    {
+        parser::InvalidSyntaxException ise(offender, expected);
+        FAIL() << "Should have thrown std::invalid_argument.";
+    }
+    catch (std::invalid_argument &e)
+    {
+        EXPECT_STREQ("Cannot construct InvalidSyntaxException with empty list of expected tokens types.", e.what());
+    }
+    catch (...) 
+    {
+        FAIL() << "Should have thrown std::invalid_argument.";
+    }
+}
+
+TEST(ParserTest, ItShouldThrowExceptionIfOffenderTokenTypeExistsWithinExpected) 
+{
+    lexer::Token offender(lexer::TokenType::EQUALS, "=", lexer::Location(1, 1), lexer::Location(1, 2));
+    std::vector<lexer::TokenType> expected{lexer::TokenType::EQUALS};
+
+    try
+    {
+        parser::InvalidSyntaxException ise(offender, expected);
+        FAIL() << "Should have thrown std::invalid_argument.";
+    }
+    catch (std::invalid_argument &e)
+    {
+        EXPECT_STREQ("Cannot construct InvalidSyntaxException where expected tokens contains offender EQUALS [EQUALS].", e.what());
+    }
+    catch (...) 
+    {
+        FAIL() << "Should have thrown std::invalid_argument.";
+    }
 }
