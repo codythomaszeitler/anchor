@@ -14,7 +14,7 @@ namespace parser
     ReturnStmt::ReturnStmt(std::shared_ptr<Expr> expr) : expr(std::move(expr))
     {
     }
-    
+
     PrintStmt::PrintStmt(std::shared_ptr<Expr> expr) : expr(std::move(expr))
     {
     }
@@ -50,19 +50,9 @@ namespace parser
             this->consume(lexer::TokenType::SEMICOLON);
             return returnStmt;
         }
-        else if (maybeReturnOrFunctionDefinition.getTokenType() == lexer::TokenType::PRINT) 
+        else if (maybeReturnOrFunctionDefinition.getTokenType() == lexer::TokenType::PRINT)
         {
-            this->consume(lexer::TokenType::PRINT);
-
-            this->consume(lexer::TokenType::LEFT_PAREN);
-            parser::PrintStmt *printStmtPointer = new parser::PrintStmt(this->expr());
-            printStmtPointer->type = parser::StmtType::PRINT;
-            this->consume(lexer::TokenType::RIGHT_PAREN);
-
-            std::shared_ptr<parser::Stmt> printStmt(printStmtPointer);
-            this->consume(lexer::TokenType::SEMICOLON);
-
-            return printStmt;
+            return this->printStmt();
         }
         else
         {
@@ -83,6 +73,21 @@ namespace parser
         functionStmt->identifier = identifier;
         this->consume(lexer::TokenType::SEMICOLON);
         return std::shared_ptr<Stmt>(functionStmt);
+    }
+
+    std::shared_ptr<Stmt> Parser::printStmt()
+    {
+        this->consume(lexer::TokenType::PRINT);
+
+        this->consume(lexer::TokenType::LEFT_PAREN);
+        parser::PrintStmt *printStmtPointer = new parser::PrintStmt(this->expr());
+        printStmtPointer->type = parser::StmtType::PRINT;
+        this->consume(lexer::TokenType::RIGHT_PAREN);
+
+        std::shared_ptr<parser::Stmt> printStmt(printStmtPointer);
+        this->consume(lexer::TokenType::SEMICOLON);
+
+        return printStmt;
     }
 
     std::string Parser::identifier()
@@ -136,17 +141,20 @@ namespace parser
     std::shared_ptr<parser::Expr> Parser::expr()
     {
         lexer::Token peeked = this->peek();
-        if (peeked.getTokenType() == lexer::TokenType::STRING) {
+        if (peeked.getTokenType() == lexer::TokenType::STRING)
+        {
             return this->parseStringLiteral();
-        } else {
+        }
+        else
+        {
             return this->parseBinaryOperation();
         }
     }
-    
+
     std::shared_ptr<parser::Expr> Parser::parseStringLiteral()
     {
         lexer::Token popped = this->pop();
-        parser::StringLiteral* stringLiteral = new parser::StringLiteral();
+        parser::StringLiteral *stringLiteral = new parser::StringLiteral();
         stringLiteral->literal = popped.getRaw().substr(1, popped.getRaw().length() - 2);
         stringLiteral->type = parser::ExprType::STRING_LITERAL;
         return std::shared_ptr<parser::Expr>(stringLiteral);
