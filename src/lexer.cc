@@ -1,6 +1,7 @@
 #include "lexer.hh"
 #include <stdexcept>
 #include <cctype>
+#include <map>
 
 lexer::Location::Location(int row, int column) : row(row), column(column)
 {
@@ -33,6 +34,31 @@ bool lexer::Location::operator==(const Location &that) const
 bool lexer::Location::operator!=(const Location &that) const
 {
     return !(*this == that);
+}
+
+std::string lexer::tostring(lexer::TokenType tokenType)
+{
+    static std::map<lexer::TokenType, std::string> map;
+    if (map.size() == 0)
+    {
+        map[lexer::TokenType::INTEGER_TYPE] = "INTEGER_TYPE";
+        map[lexer::TokenType::INTEGER] = "INTEGER";
+        map[lexer::TokenType::IDENTIFIER] = "IDENTIFIER";
+        map[lexer::TokenType::VAL] = "VAL";
+        map[lexer::TokenType::PLUS_SIGN] = "PLUS_SIGN";
+        map[lexer::TokenType::EQUALS] = "EQUALS";
+        map[lexer::TokenType::SEMICOLON] = "SEMICOLON";
+        map[lexer::TokenType::FUNCTION] = "FUNCTION";
+        map[lexer::TokenType::LEFT_PAREN] = "LEFT_PAREN";
+        map[lexer::TokenType::RIGHT_PAREN] = "RIGHT_PAREN";
+        map[lexer::TokenType::LEFT_BRACKET] = "LEFT_BRACKET";
+        map[lexer::TokenType::RIGHT_BRACKET] = "RIGHT_BRACKET";
+        map[lexer::TokenType::RETURN] = "RETURN";
+        map[lexer::TokenType::PRINT] = "PRINT";
+        map[lexer::TokenType::STRING] = "STRING";
+    }
+
+    return map[tokenType];
 }
 
 lexer::Token::Token(TokenType tokenType, std::string raw, Location start, Location end)
@@ -113,7 +139,7 @@ lexer::Token lexer::Lexer::next()
         return parseSingleCharacterTokenType(lexer::TokenType::PLUS_SIGN);
     }
 
-    if (peekChar() == '"') 
+    if (peekChar() == '"')
     {
         return this->parseRawStringLiteral();
     }
@@ -196,10 +222,11 @@ lexer::Token lexer::Lexer::parseRawStringLiteral()
     lexer::Location start(0, this->position);
 
     std::string raw(1, this->popChar());
-    while (this->peekChar() != '"') {
+    while (this->peekChar() != '"')
+    {
         raw += this->popChar();
     }
-    // should be a "" 
+    // should be a ""
     raw.push_back(this->popChar());
 
     lexer::Location end(0, this->position - 1);
@@ -273,7 +300,8 @@ namespace lexer
     {
         lexer::Lexer lexer(a);
         std::deque<Token> tokens;
-        while (lexer.hasNext()) {
+        while (lexer.hasNext())
+        {
             tokens.push_back(lexer.next());
         }
         return tokens;
