@@ -4,6 +4,10 @@ namespace util
 {
     std::string join(std::vector<std::string>::iterator begin, std::vector<std::string>::iterator end, std::string delim)
     {
+        if (end < begin) {
+            throw std::invalid_argument("Begin iterator was after end iterator. No range found.");
+        }
+
         if (begin == end) {
             return "";
         }
