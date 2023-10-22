@@ -43,6 +43,8 @@ namespace lexer
         STRING
     };
 
+    std::string tostring(lexer::TokenType tokenType);
+
     class Token
     {
     private:

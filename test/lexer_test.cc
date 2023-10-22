@@ -306,3 +306,10 @@ TEST(TokenTest, ItShouldBeAbleToCreateToken)
 
     EXPECT_EQ(lexer::Location(1, 5), testObject.getEnd());
 }
+
+TEST(TokenTest, ItShouldBeAbleToStringifyATokenType) {
+    lexer::TokenType equalsTokenType = lexer::TokenType::EQUALS;
+    std::string asString = lexer::tostring(equalsTokenType);
+    EXPECT_EQ("EQUALS", asString);
+    EXPECT_EQ("SEMICOLON", lexer::tostring(lexer::TokenType::SEMICOLON));
+}
