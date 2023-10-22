@@ -12,7 +12,8 @@ namespace parser
     enum class StmtType
     {
         FUNCTION,
-        RETURN
+        RETURN,
+        PRINT
     };
 
     class Stmt
@@ -23,7 +24,8 @@ namespace parser
 
     enum class ExprType {
         BINARY_OP,
-        INTEGER_LITERAL
+        INTEGER_LITERAL,
+        STRING_LITERAL
     };
 
     class Expr
@@ -46,10 +48,23 @@ namespace parser
         std::shared_ptr<Expr> expr;
     };
 
+    class PrintStmt : public Stmt 
+    {
+    public:
+        PrintStmt(std::shared_ptr<Expr>);
+        std::shared_ptr<Expr> expr;
+    };
+
     class IntegerLiteral : public Expr
     {
     public:
         int integer;
+    };
+
+    class StringLiteral : public Expr 
+    {
+    public:
+        std::string literal;
     };
 
     enum class Operation
@@ -89,6 +104,7 @@ namespace parser
         std::shared_ptr<Stmt> functionStmt();
         std::shared_ptr<parser::Expr> expr();
 
+        std::shared_ptr<parser::Expr> parseStringLiteral();
         std::shared_ptr<parser::Expr> parseInteger();
         parser::Operation parseOperation();
         std::shared_ptr<parser::Expr> parseBinaryOperation();

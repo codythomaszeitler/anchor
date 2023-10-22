@@ -38,7 +38,9 @@ namespace lexer
         RIGHT_PAREN,
         LEFT_BRACKET,
         RIGHT_BRACKET,
-        RETURN
+        RETURN,
+        PRINT,
+        STRING
     };
 
     class Token
@@ -76,6 +78,7 @@ namespace lexer
         lexer::Token parseRightBracket();
         lexer::Token parseSingleCharacterTokenType(lexer::TokenType tokenType);
         lexer::Token parseNumber();
+        lexer::Token parseRawStringLiteral();
 
         char popChar();
         char peekChar();
