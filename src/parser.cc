@@ -42,13 +42,7 @@ namespace parser
 
         if (maybeReturnOrFunctionDefinition.getTokenType() == lexer::TokenType::RETURN)
         {
-            this->consume(lexer::TokenType::RETURN);
-
-            parser::ReturnStmt *returnStmtPointer = new parser::ReturnStmt(this->expr());
-            returnStmtPointer->type = parser::StmtType::RETURN;
-            std::shared_ptr<parser::Stmt> returnStmt(returnStmtPointer);
-            this->consume(lexer::TokenType::SEMICOLON);
-            return returnStmt;
+            return this->returnStmt();
         }
         else if (maybeReturnOrFunctionDefinition.getTokenType() == lexer::TokenType::PRINT)
         {
@@ -88,6 +82,17 @@ namespace parser
         this->consume(lexer::TokenType::SEMICOLON);
 
         return printStmt;
+    }
+
+    std::shared_ptr<Stmt> Parser::returnStmt()
+    {
+        this->consume(lexer::TokenType::RETURN);
+
+        parser::ReturnStmt *returnStmtPointer = new parser::ReturnStmt(this->expr());
+        returnStmtPointer->type = parser::StmtType::RETURN;
+        std::shared_ptr<parser::Stmt> returnStmt(returnStmtPointer);
+        this->consume(lexer::TokenType::SEMICOLON);
+        return returnStmt;
     }
 
     std::string Parser::identifier()
