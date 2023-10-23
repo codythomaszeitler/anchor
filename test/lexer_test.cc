@@ -49,6 +49,14 @@ TEST(LexerTest, ReadInIntegerDecl)
                   lexer::Location(1, 12),
                   lexer::Location(1, 12)),
               semicolon);
+
+    lexer::Token endOfStream = testObject.next();
+    EXPECT_EQ(lexer::Token(
+                  lexer::TokenType::END_OF_STREAM,
+                  "\0",
+                  lexer::Location(1, 13),
+                  lexer::Location(1, 13)),
+              endOfStream);
     EXPECT_FALSE(testObject.hasNext());
 }
 
@@ -95,6 +103,14 @@ TEST(LexerTest, ReadInAdditionOfTwoNumbers)
                   lexer::Location(1, 9),
                   lexer::Location(1, 9)),
               six);
+
+    lexer::Token endOfStream = testObject.next();
+    EXPECT_EQ(lexer::Token(
+                  lexer::TokenType::END_OF_STREAM,
+                  "\0",
+                  lexer::Location(1, 10),
+                  lexer::Location(1, 10)),
+              endOfStream);
 }
 
 TEST(LexerTest, ReadInVoidFunctionDeclaration)
@@ -156,6 +172,14 @@ TEST(LexerTest, ReadInVoidFunctionDeclaration)
                   lexer::Location(1, 18),
                   lexer::Location(1, 18)),
               semicolon);
+
+    lexer::Token endOfStream = testObject.next();
+    EXPECT_EQ(lexer::Token(
+                  lexer::TokenType::END_OF_STREAM,
+                  "\0",
+                  lexer::Location(1, 19),
+                  lexer::Location(1, 19)),
+              endOfStream);
 }
 
 TEST(LexerTest, ReadInReturnStatementWithNumber)
@@ -307,7 +331,8 @@ TEST(TokenTest, ItShouldBeAbleToCreateToken)
     EXPECT_EQ(lexer::Location(1, 5), testObject.getEnd());
 }
 
-TEST(TokenTest, ItShouldBeAbleToStringifyATokenType) {
+TEST(TokenTest, ItShouldBeAbleToStringifyATokenType)
+{
     lexer::TokenType equalsTokenType = lexer::TokenType::EQUALS;
     std::string asString = lexer::tostring(equalsTokenType);
     EXPECT_EQ("EQUALS", asString);

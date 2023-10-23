@@ -40,7 +40,8 @@ namespace lexer
         RIGHT_BRACKET,
         RETURN,
         PRINT,
-        STRING
+        STRING,
+        END_OF_STREAM
     };
 
     std::string tostring(lexer::TokenType tokenType);
