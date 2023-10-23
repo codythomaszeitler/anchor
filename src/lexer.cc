@@ -97,6 +97,8 @@ bool lexer::Token::operator==(const Token &that) const
 lexer::Lexer::Lexer(std::string source)
 {
     this->position = 0;
+    this->currentLine = 1;
+    this->currentColumn = 1;
     this->source = source;
 }
 
@@ -189,27 +191,27 @@ lexer::Token lexer::Lexer::parseRightBracket()
 
 lexer::Token lexer::Lexer::parseSingleCharacterTokenType(lexer::TokenType tokenType)
 {
-    lexer::Location start = lexer::Location(0, this->position);
+    lexer::Location start(this->currentLine, this->currentColumn);
     std::string raw(1, popChar());
 
     return lexer::Token(
         tokenType,
         raw,
         start,
-        lexer::Location(0, this->position - 1));
+        lexer::Location(this->currentLine, this->currentColumn - 1));
 }
 
 lexer::Token lexer::Lexer::parseNumber()
 {
     std::string raw = "";
 
-    lexer::Location start(0, this->position);
+    lexer::Location start(this->currentLine, this->currentColumn);
     while (isdigit(peekChar()))
     {
         raw += popChar();
     }
 
-    lexer::Location end(0, this->position - 1);
+    lexer::Location end(this->currentLine, this->currentColumn - 1);
     return lexer::Token(
         lexer::TokenType::INTEGER,
         raw,
@@ -219,7 +221,7 @@ lexer::Token lexer::Lexer::parseNumber()
 
 lexer::Token lexer::Lexer::parseRawStringLiteral()
 {
-    lexer::Location start(0, this->position);
+    lexer::Location start(this->currentLine, this->currentColumn);
 
     std::string raw(1, this->popChar());
     while (this->peekChar() != '"')
@@ -229,7 +231,7 @@ lexer::Token lexer::Lexer::parseRawStringLiteral()
     // should be a ""
     raw.push_back(this->popChar());
 
-    lexer::Location end(0, this->position - 1);
+    lexer::Location end(this->currentLine, this->currentColumn - 1);
     return lexer::Token(
         lexer::TokenType::STRING,
         raw,
@@ -241,13 +243,13 @@ lexer::Token lexer::Lexer::parseKeywordOrIdentifier()
 {
     std::string raw = "";
 
-    lexer::Location start(0, this->position);
+    lexer::Location start(this->currentLine, this->currentColumn);
     while (isalnum(peekChar()))
     {
         raw += popChar();
     }
 
-    lexer::Location end(0, this->position - 1);
+    lexer::Location end(this->currentLine, this->currentColumn - 1);
     if ("val" == raw)
     {
         return lexer::Token(lexer::TokenType::VAL, raw, start, end);
@@ -274,6 +276,7 @@ char lexer::Lexer::popChar()
 {
     char current = this->peekChar();
     this->position++;
+    this->currentColumn++;
     return current;
 }
 
@@ -286,6 +289,12 @@ void lexer::Lexer::chewUpWhitespace()
 {
     while (isspace(peekChar()))
     {
+        if (peekChar() == '\n')
+        {
+            this->currentLine++;
+            this->currentColumn = 1;
+        }
+
         popChar();
     }
 }

@@ -67,6 +67,8 @@ namespace lexer
     {
     private:
         int position;
+        int currentLine;
+        int currentColumn;
         std::string source;
 
         void chewUpWhitespace();

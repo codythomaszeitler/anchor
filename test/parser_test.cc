@@ -77,31 +77,29 @@ TEST(ParserTest, ItShouldBeAbleToParserPrintWithEmptyStringBody)
     EXPECT_EQ("", stringLiteralPointer->literal);
 }
 
-// TEST(ParserTest, ItShouldBeAbleToPrintAndRecoverFromBadStmt)
-// {
-//     std::string sourceCode =
-//     R"(
-//     function main() {
-//         print("Hello World!");
-//         var a = 5 a+ 3;
-//         print("Meow, mix!");
-//     })";
+TEST(ParserTest, ItShouldBeAbleToPrintAndRecoverFromBadStmt)
+{
+    std::string sourceCode =
+    R"(
+    function main() {
+        print"Hello World!");
+    };)";
 
-//     std::deque<lexer::Token> tokens = lexer::lex(sourceCode);
+    std::deque<lexer::Token> tokens = lexer::lex(sourceCode);
 
-//     parser::Parser testObject(tokens);
-//     parser::Program program = testObject.parse();
+    parser::Parser testObject(tokens);
+    parser::Program program = testObject.parse();
 
-//     EXPECT_EQ(1, program.stmts.size());
-//     EXPECT_FALSE(program.isSyntacticallyCorrect());
+    EXPECT_EQ(1, program.stmts.size());
+    EXPECT_FALSE(program.isSyntacticallyCorrect());
 
-//     std::vector<parser::ErrorLog> errors = program.errors();
+    std::vector<parser::ErrorLog> errors = program.errors;
 
-//     EXPECT_EQ(1, errors.size());
+    EXPECT_EQ(1, errors.size());
 
-//     parser::ErrorLog error = errors[0];
-//     EXPECT_EQ("Expected BINARY_OPERATOR or SEMICOLON at line 3, column 15, found \"a\".", error.message());
-// }
+    parser::ErrorLog error = errors[0];
+    EXPECT_EQ("Expected: LEFT_PAREN at line 3, column 15, but found \"\"Hello World!\"\".", error.getMessage());
+}
 
 TEST(ParserTest, ItShouldBeAbleToConstructAnInvalidSyntaxException)
 {
