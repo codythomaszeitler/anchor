@@ -21,6 +21,11 @@ namespace parser
     PrintStmt::PrintStmt(std::shared_ptr<Expr> expr) : expr(std::move(expr))
     {
     }
+    
+    BadStmt::BadStmt(lexer::Token token, std::vector<lexer::TokenType> expected, std::string message) : offender(token), expected(expected), message(message)
+    {
+        
+    }
 
     std::string InvalidSyntaxException::parseMessage(lexer::Token offender, std::vector<lexer::TokenType> expected)
     {
@@ -51,28 +56,23 @@ namespace parser
     {
     }
 
+    ErrorLog::ErrorLog(std::string message) : message(message)
+    {
+    }
+
     const char *InvalidSyntaxException::what() const throw()
     {
         return std::runtime_error::what();
     }
 
-    ErrorLog::ErrorLog(lexer::Token offender, std::vector<lexer::TokenType> expected) : offender(offender), expected(expected)
+    std::string ErrorLog::getMessage()
     {
-    }
-
-    std::string ErrorLog::message()
-    {
-        return "";
+        return this->message;
     }
 
     bool Program::isSyntacticallyCorrect()
     {
-        return true;
-    }
-
-    std::vector<parser::ErrorLog> Program::errors()
-    {
-        return std::vector<parser::ErrorLog>();
+        return this->errors.empty();
     }
 
     Parser::Parser(std::deque<lexer::Token> tokens) : tokens(tokens)
@@ -87,26 +87,42 @@ namespace parser
             stmts.push_back(this->stmt());
         }
 
-        parser::Program program;
-        program.stmts = stmts;
-        return program;
+        this->compiling.stmts = stmts;
+        return compiling;
     };
 
     std::shared_ptr<Stmt> Parser::stmt()
     {
         lexer::Token maybeReturnOrFunctionDefinition = this->peek();
 
-        if (maybeReturnOrFunctionDefinition.getTokenType() == lexer::TokenType::RETURN)
+        try
         {
-            return this->returnStmt();
+            if (maybeReturnOrFunctionDefinition.getTokenType() == lexer::TokenType::RETURN)
+            {
+                return this->returnStmt();
+            }
+            else if (maybeReturnOrFunctionDefinition.getTokenType() == lexer::TokenType::PRINT)
+            {
+                return this->printStmt();
+            }
+            else
+            {
+                return this->functionStmt();
+            }
         }
-        else if (maybeReturnOrFunctionDefinition.getTokenType() == lexer::TokenType::PRINT)
+        catch (parser::InvalidSyntaxException &ise) 
         {
-            return this->printStmt();
-        }
-        else
-        {
-            return this->functionStmt();
+            auto syncWithSemicolon = [&]() {
+                while (this->pop().getTokenType() != lexer::TokenType::SEMICOLON);
+            };
+
+            this->compiling.errors.push_back(parser::ErrorLog(ise.what()));
+            std::shared_ptr<Stmt> badStmt = std::make_shared<parser::BadStmt>(ise.offender, ise.expected, ise.what());
+            badStmt->type = parser::StmtType::BAD;
+
+            syncWithSemicolon();
+
+            return badStmt;
         }
     }
 
@@ -184,6 +200,7 @@ namespace parser
         lexer::Token consumed = this->peek();
         if (consumed.getTokenType() != tokenType)
         {
+            throw parser::InvalidSyntaxException(consumed, std::vector<lexer::TokenType>{tokenType});
         }
         else
         {

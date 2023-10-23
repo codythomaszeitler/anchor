@@ -23,7 +23,8 @@ namespace parser
         parser::StmtType type;
     };
 
-    enum class ExprType {
+    enum class ExprType
+    {
         BINARY_OP,
         INTEGER_LITERAL,
         STRING_LITERAL
@@ -49,11 +50,20 @@ namespace parser
         std::shared_ptr<Expr> expr;
     };
 
-    class PrintStmt : public Stmt 
+    class PrintStmt : public Stmt
     {
     public:
         PrintStmt(std::shared_ptr<Expr>);
         std::shared_ptr<Expr> expr;
+    };
+
+    class BadStmt : public Stmt 
+    {
+    public:
+        lexer::Token offender;
+        std::vector<lexer::TokenType> expected;
+        std::string message;
+        BadStmt(lexer::Token, std::vector<lexer::TokenType>, std::string);
     };
 
     class IntegerLiteral : public Expr
@@ -62,7 +72,7 @@ namespace parser
         int integer;
     };
 
-    class StringLiteral : public Expr 
+    class StringLiteral : public Expr
     {
     public:
         std::string literal;
@@ -82,24 +92,25 @@ namespace parser
         std::shared_ptr<parser::Expr> right;
     };
 
-    class InvalidSyntaxException : public std::runtime_error {
-    private:
-        lexer::Token offender;
-        std::vector<lexer::TokenType> expected;
-        static std::string parseMessage(lexer::Token offender, std::vector<lexer::TokenType> expected);
-    public:
-        InvalidSyntaxException(lexer::Token offender, std::vector<lexer::TokenType> expected);        
-        virtual const char* what() const throw();
-    };
-
-    class ErrorLog 
+    class InvalidSyntaxException : public std::runtime_error
     {
     private:
+        static std::string parseMessage(lexer::Token offender, std::vector<lexer::TokenType> expected);
+    public:
         lexer::Token offender;
         std::vector<lexer::TokenType> expected;
+
+        InvalidSyntaxException(lexer::Token offender, std::vector<lexer::TokenType> expected);
+        virtual const char *what() const throw();
+    };
+
+    class ErrorLog
+    {
+    private:
+        std::string message;
     public:
-        ErrorLog(lexer::Token offender, std::vector<lexer::TokenType> expected); 
-        std::string message();
+        ErrorLog(std::string);
+        std::string getMessage();
     };
 
     class Program : public Stmt
@@ -113,13 +124,14 @@ namespace parser
         }
 
         bool isSyntacticallyCorrect();
-        std::vector<parser::ErrorLog> errors();
+        std::vector<parser::ErrorLog> errors;
     };
 
     class Parser
     {
     private:
         std::deque<lexer::Token> tokens;
+        parser::Program compiling;
 
         std::vector<std::string> args();
         std::string identifier();
