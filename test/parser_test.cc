@@ -80,9 +80,10 @@ TEST(ParserTest, ItShouldBeAbleToParserPrintWithEmptyStringBody)
 TEST(ParserTest, ItShouldBeAbleToPrintAndRecoverFromBadStmt)
 {
     std::string sourceCode =
-    R"(
+        R"(
     function main() {
         print"Hello World!");
+        print("Hello World!");
     };)";
 
     std::deque<lexer::Token> tokens = lexer::lex(sourceCode);
@@ -99,6 +100,15 @@ TEST(ParserTest, ItShouldBeAbleToPrintAndRecoverFromBadStmt)
 
     parser::ErrorLog error = errors[0];
     EXPECT_EQ("Expected: LEFT_PAREN at line 3, column 15, but found \"\"Hello World!\"\".", error.getMessage());
+
+    std::shared_ptr<parser::FunctionStmt> stmt = program.get<parser::FunctionStmt>(0);
+    EXPECT_EQ(2, stmt->stmts.size());
+
+    parser::BadStmt *badStmt = (parser::BadStmt *)stmt->stmts[0].get();
+    EXPECT_EQ(parser::StmtType::BAD, badStmt->type);
+
+    parser::PrintStmt *printStmt = (parser::PrintStmt*)stmt->stmts[1].get();
+    EXPECT_EQ(parser::StmtType::PRINT, printStmt->type);
 }
 
 TEST(ParserTest, ItShouldBeAbleToConstructAnInvalidSyntaxException)
@@ -125,13 +135,13 @@ TEST(ParserTest, ItShouldNotBeAbleToConstructAnISEWithoutExpectedTokenTypes)
     {
         EXPECT_STREQ("Cannot construct InvalidSyntaxException with empty list of expected tokens types.", e.what());
     }
-    catch (...) 
+    catch (...)
     {
         FAIL() << "Should have thrown std::invalid_argument.";
     }
 }
 
-TEST(ParserTest, ItShouldThrowExceptionIfOffenderTokenTypeExistsWithinExpected) 
+TEST(ParserTest, ItShouldThrowExceptionIfOffenderTokenTypeExistsWithinExpected)
 {
     lexer::Token offender(lexer::TokenType::EQUALS, "=", lexer::Location(1, 1), lexer::Location(1, 2));
     std::vector<lexer::TokenType> expected{lexer::TokenType::EQUALS};
@@ -145,7 +155,7 @@ TEST(ParserTest, ItShouldThrowExceptionIfOffenderTokenTypeExistsWithinExpected)
     {
         EXPECT_STREQ("Cannot construct InvalidSyntaxException where expected tokens contains offender EQUALS [EQUALS].", e.what());
     }
-    catch (...) 
+    catch (...)
     {
         FAIL() << "Should have thrown std::invalid_argument.";
     }
