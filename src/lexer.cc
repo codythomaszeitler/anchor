@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <cctype>
 #include <map>
+#include <iostream>
 
 lexer::Location::Location(int row, int column) : row(row), column(column)
 {
@@ -156,6 +157,17 @@ lexer::Token lexer::Lexer::next()
         return this->parseKeywordOrIdentifier();
     }
 
+    if (peekChar() == '\0')
+    {
+        lexer::Location start(this->currentLine, this->currentColumn);
+        char endOfString = popChar();
+        return lexer::Token(
+            lexer::TokenType::END_OF_STREAM,
+            "\0",
+            start,
+            lexer::Location(this->currentLine, this->currentColumn - 1));
+    }
+
     throw std::invalid_argument("Lexer could not parse character at " + std::to_string(this->position));
 }
 
@@ -292,7 +304,7 @@ void lexer::Lexer::chewUpWhitespace()
         if (peekChar() == '\n')
         {
             this->currentLine++;
-            this->currentColumn = 1;
+            this->currentColumn = 0;
         }
 
         popChar();
@@ -302,7 +314,8 @@ namespace lexer
 {
     bool Lexer::hasNext()
     {
-        return this->source.length() != this->position;
+        const int lengthIncludingNullTerminator = this->source.length() + 1;
+        return lengthIncludingNullTerminator != this->position;
     }
 
     std::deque<Token> lex(std::string a)

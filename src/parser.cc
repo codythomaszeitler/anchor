@@ -21,10 +21,9 @@ namespace parser
     PrintStmt::PrintStmt(std::shared_ptr<Expr> expr) : expr(std::move(expr))
     {
     }
-    
+
     BadStmt::BadStmt(lexer::Token token, std::vector<lexer::TokenType> expected, std::string message) : offender(token), expected(expected), message(message)
     {
-        
     }
 
     std::string InvalidSyntaxException::parseMessage(lexer::Token offender, std::vector<lexer::TokenType> expected)
@@ -82,7 +81,7 @@ namespace parser
     parser::Program Parser::parse()
     {
         std::vector<std::shared_ptr<Stmt>> stmts;
-        while (this->tokens.size() != 0)
+        while (this->peek().getTokenType() != lexer::TokenType::END_OF_STREAM && !this->tokens.empty())
         {
             stmts.push_back(this->stmt());
         }
@@ -110,10 +109,18 @@ namespace parser
                 return this->functionStmt();
             }
         }
-        catch (parser::InvalidSyntaxException &ise) 
+        catch (parser::InvalidSyntaxException &ise)
         {
-            auto syncWithSemicolon = [&]() {
-                while (this->pop().getTokenType() != lexer::TokenType::SEMICOLON);
+            auto syncWithSemicolon = [&]()
+            {
+                while (true)
+                {
+                    lexer::Token popped = this->pop();
+                    if (popped.getTokenType() == lexer::TokenType::SEMICOLON || popped.getTokenType() == lexer::TokenType::END_OF_STREAM)
+                    {
+                        break;
+                    }
+                }
             };
 
             this->compiling.errors.push_back(parser::ErrorLog(ise.what()));

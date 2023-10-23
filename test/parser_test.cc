@@ -99,7 +99,7 @@ TEST(ParserTest, ItShouldBeAbleToPrintAndRecoverFromBadStmt)
     EXPECT_EQ(1, errors.size());
 
     parser::ErrorLog error = errors[0];
-    EXPECT_EQ("Expected: LEFT_PAREN at line 3, column 15, but found \"\"Hello World!\"\".", error.getMessage());
+    EXPECT_EQ("Expected: LEFT_PAREN at line 3, column 14, but found \"\"Hello World!\"\".", error.getMessage());
 
     std::shared_ptr<parser::FunctionStmt> stmt = program.get<parser::FunctionStmt>(0);
     EXPECT_EQ(2, stmt->stmts.size());
@@ -107,8 +107,23 @@ TEST(ParserTest, ItShouldBeAbleToPrintAndRecoverFromBadStmt)
     parser::BadStmt *badStmt = (parser::BadStmt *)stmt->stmts[0].get();
     EXPECT_EQ(parser::StmtType::BAD, badStmt->type);
 
-    parser::PrintStmt *printStmt = (parser::PrintStmt*)stmt->stmts[1].get();
+    parser::PrintStmt *printStmt = (parser::PrintStmt *)stmt->stmts[1].get();
     EXPECT_EQ(parser::StmtType::PRINT, printStmt->type);
+}
+
+TEST(ParserTest, ItShouldBeAbleToHandleGibberish)
+{
+    std::string sourceCode =
+    R"(
+        This is essentially gibberish
+    )";
+
+    std::deque<lexer::Token> tokens = lexer::lex(sourceCode);
+
+    parser::Parser testObject(tokens);
+    parser::Program program = testObject.parse();
+
+    EXPECT_FALSE(program.isSyntacticallyCorrect());
 }
 
 TEST(ParserTest, ItShouldBeAbleToConstructAnInvalidSyntaxException)
