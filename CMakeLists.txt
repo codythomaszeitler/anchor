@@ -28,6 +28,7 @@ add_executable(main
     ${PROJECT_SOURCE_DIR}/src/lexer.cc 
     ${PROJECT_SOURCE_DIR}/src/parser.cc 
     ${PROJECT_SOURCE_DIR}/src/compiler.cc 
+    ${PROJECT_SOURCE_DIR}/src/anchor.cc 
     ${PROJECT_SOURCE_DIR}/src/util.cc)
 
 enable_testing()
@@ -36,10 +37,13 @@ add_executable(
     main_test
     ${PROJECT_SOURCE_DIR}/src/lexer.cc
     ${PROJECT_SOURCE_DIR}/src/parser.cc
+    ${PROJECT_SOURCE_DIR}/src/compiler.cc 
+    ${PROJECT_SOURCE_DIR}/src/anchor.cc 
     ${PROJECT_SOURCE_DIR}/test/main_test.cc
     ${PROJECT_SOURCE_DIR}/test/compiler_test.cc
     ${PROJECT_SOURCE_DIR}/test/lexer_test.cc
     ${PROJECT_SOURCE_DIR}/test/parser_test.cc
+    ${PROJECT_SOURCE_DIR}/test/anchor_test.cc 
     ${PROJECT_SOURCE_DIR}/src/util.cc
     ${PROJECT_SOURCE_DIR}/test/util_test.cc
 )

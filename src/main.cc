@@ -1,11 +1,10 @@
 #include <iostream>
+#include <string>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 
-#include "llvm/Support/raw_ostream.h"
-#include "lexer.hh"
-#include "parser.hh"
-#include "compiler.hh"
+#include "anchor.hh"
 
 int main(int argc, char *argv[])
 {
@@ -31,22 +30,8 @@ int main(int argc, char *argv[])
         input = buffer.str();
     }
 
-    parser::Parser parser(lexer::lex(input));
-    Compiler compiler;
-
-    parser::Program program = parser.parse();
-
-    if (program.isSyntacticallyCorrect())
-    {
-        compiler.compile(llvm::outs(), program);
-    }
-    else
-    {
-        for (parser::ErrorLog errorLog : program.errors)
-        {
-            std::cout << errorLog.getMessage() << std::endl;
-        }
-    }
+    std::string llvmOutput = anchor::compile(input);
+    std::cout << llvmOutput << std::endl;
 
     return 0;
 }
