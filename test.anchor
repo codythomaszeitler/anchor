@@ -1,1 +1,4 @@
-function foo() {return 3 + 5;};function main() {return 0 + 0;};
+function integer main() {
+    print("Hello, World!");
+    return 0 + 0;
+};

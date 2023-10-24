@@ -20,7 +20,18 @@ private:
     std::unique_ptr<llvm::LLVMContext> context;
     std::unique_ptr<llvm::Module> compiling; 
     std::unique_ptr<llvm::IRBuilder<>> builder;
+    void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::FunctionStmt> functionStmt);
+    void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::PrintStmt> printStmt);
+    void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::ReturnStmt> returnStmt);
+    void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::Stmt> stmt);
+    llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::Expr> expr);
+    llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::StringLiteral> stringLiteral);
+    llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::IntegerLiteral> integerLiteral);
 
+    using Body = std::vector<std::shared_ptr<parser::Stmt>>;
+    void compile(llvm::raw_ostream &outs, Body functionStmt);
+
+    void declarePrintFunction();
 public:
     Compiler();
     void compile(llvm::raw_ostream&, parser::Program);

@@ -95,6 +95,8 @@
         "cstdarg": "cpp",
         "cwctype": "cpp",
         "stack": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "__verbose_abort": "cpp",
+        "execution": "cpp"
     }
 }
