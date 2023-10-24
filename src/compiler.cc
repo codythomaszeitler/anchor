@@ -69,6 +69,10 @@ namespace compiler
         {
             args.push_back(this->builder->CreateGlobalStringPtr(llvm::StringRef("%s")));
         }
+        else if (stmt->expr->returnType == parser::Type::INTEGER)
+        {
+            args.push_back(this->builder->CreateGlobalStringPtr(llvm::StringRef("%d")));
+        }
 
         llvm::Value *expr = this->compile(outs, stmt->expr);
         args.push_back(expr);
