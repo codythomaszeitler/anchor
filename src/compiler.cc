@@ -93,6 +93,11 @@ namespace compiler
             std::shared_ptr<parser::IntegerLiteral> integerLiteral = std::static_pointer_cast<parser::IntegerLiteral>(expr);
             return this->compile(outs, integerLiteral);
         }
+        else if (expr->type == parser::ExprType::BINARY_OP) 
+        {
+            std::shared_ptr<parser::BinaryOperation> binaryOperation = std::static_pointer_cast<parser::BinaryOperation>(expr);
+            return this->compile(outs, binaryOperation);
+        }
         else
         {
             throw std::invalid_argument("Unsupported expression type.");
@@ -114,5 +119,12 @@ namespace compiler
     {
         return llvm::ConstantInt::getIntegerValue(llvm::Type::getInt32Ty(*this->context), llvm::APInt(32, integerLiteral->integer));
     }
-
+    
+    llvm::Value* Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::BinaryOperation> integerLiteral)
+    {
+        llvm::Value* left = this->compile(outs, integerLiteral->left);
+        llvm::Value* right = this->compile(outs, integerLiteral->right);
+        llvm::Value* result = this->builder->CreateAdd(left, right);
+        return result;
+    }
 }
