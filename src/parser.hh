@@ -154,7 +154,6 @@ namespace parser
         std::shared_ptr<parser::Expr> parseStringLiteral();
         std::shared_ptr<parser::Expr> parseInteger();
         parser::Operation parseOperation();
-        std::shared_ptr<parser::Expr> parseBinaryOperation();
 
         lexer::Token peek();
         lexer::Token pop();

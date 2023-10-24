@@ -25,6 +25,31 @@ TEST(ParserTest, ItShouldParseFunctionDefinition)
     EXPECT_EQ(parser::Type::INTEGER, returnStmt->expr->returnType);
 }
 
+TEST(ParserTest, ItShouldParseFunctionDefinitionWithOnlyOneInteger)
+{
+    std::string sourceCode = "function integer foo() {return 3;};";
+
+    std::deque<lexer::Token> tokens = lexer::lex(sourceCode);
+
+    parser::Parser testObject(tokens);
+
+    parser::Program program = testObject.parse();
+
+    EXPECT_EQ(1, program.stmts.size());
+
+    std::shared_ptr<parser::FunctionStmt> functionStmt = program.get<parser::FunctionStmt>(0);
+    EXPECT_EQ("foo", functionStmt->identifier);
+    EXPECT_EQ(parser::Type::INTEGER, functionStmt->returnType);
+    EXPECT_EQ(parser::StmtType::FUNCTION, functionStmt.get()->type);
+
+    EXPECT_EQ(1, functionStmt->stmts.size());
+
+    std::shared_ptr<parser::ReturnStmt> returnStmt = std::static_pointer_cast<parser::ReturnStmt>(functionStmt->stmts[0]);
+    EXPECT_EQ(parser::Type::INTEGER, returnStmt->expr->returnType);
+    std::shared_ptr<parser::IntegerLiteral> expr = std::static_pointer_cast<parser::IntegerLiteral>(returnStmt->expr);
+    EXPECT_EQ(3, expr->integer);
+}
+
 TEST(ParserTest, ItShouldBeAbleToParserMainWithAPrint)
 {
     std::string sourceCode = "function void bar() {print (\"Hello, World!\");};";

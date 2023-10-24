@@ -255,7 +255,19 @@ namespace parser
         }
         else
         {
-            return this->parseBinaryOperation();
+            std::shared_ptr<parser::Expr> expr = this->parseInteger();
+            if (this->peek().getTokenType() == lexer::TokenType::PLUS_SIGN)
+            {
+                parser::BinaryOperation *binaryOperation = new parser::BinaryOperation();
+                binaryOperation->left = expr;
+                binaryOperation->operation = this->parseOperation();
+                binaryOperation->right = this->parseInteger();
+                binaryOperation->type = parser::ExprType::BINARY_OP;
+                binaryOperation->returnType = parser::Type::INTEGER;
+                return std::shared_ptr<parser::Expr>(binaryOperation);
+            }
+
+            return expr;
         }
     }
 
@@ -267,17 +279,6 @@ namespace parser
         stringLiteral->type = parser::ExprType::STRING_LITERAL;
         stringLiteral->returnType = parser::Type::STRING;
         return std::shared_ptr<parser::Expr>(stringLiteral);
-    }
-
-    std::shared_ptr<parser::Expr> Parser::parseBinaryOperation()
-    {
-        parser::BinaryOperation *binaryOperation = new parser::BinaryOperation();
-        binaryOperation->left = this->parseInteger();
-        binaryOperation->operation = this->parseOperation();
-        binaryOperation->right = this->parseInteger();
-        binaryOperation->type = parser::ExprType::BINARY_OP;
-        binaryOperation->returnType = parser::Type::INTEGER;
-        return std::shared_ptr<parser::Expr>(binaryOperation);
     }
 
     std::shared_ptr<parser::Expr> Parser::parseInteger()
