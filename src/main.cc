@@ -9,15 +9,44 @@
 
 int main(int argc, char *argv[])
 {
-    std::ifstream t("/Users/codyzeitler/dev/anchor/test.anchor");
-    std::stringstream buffer;
-    buffer << t.rdbuf();
+    std::string input = "";
+    if (argc == 1)
+    {
+        for (std::string line; std::getline(std::cin, line);)
+        {
+            input += line;
+        }
+    }
+    else
+    {
+        if (!std::filesystem::exists(argv[1])) 
+        {
+            std::cout << "Could not find file with name " << argv[1] << std::endl;
+            return 1;
+        }
 
-    parser::Parser parser(lexer::lex(buffer.str()));
+        std::ifstream t(argv[1]);
+        std::stringstream buffer;
+        buffer << t.rdbuf();
+        input = buffer.str();
+    }
+
+    parser::Parser parser(lexer::lex(input));
     Compiler compiler;
 
     parser::Program program = parser.parse();
-    compiler.compile(llvm::outs(), program);
 
-    return 1;
+    if (program.isSyntacticallyCorrect())
+    {
+        compiler.compile(llvm::outs(), program);
+    }
+    else
+    {
+        for (parser::ErrorLog errorLog : program.errors)
+        {
+            std::cout << errorLog.getMessage() << std::endl;
+        }
+    }
+
+    return 0;
 }
