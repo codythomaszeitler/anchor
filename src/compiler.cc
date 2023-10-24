@@ -49,9 +49,6 @@ void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::Function
     this->builder->SetInsertPoint(bb);
 
     this->compile(outs, functionStmt->stmts);
-
-    llvm::Value* zero = llvm::ConstantInt::getIntegerValue(llvm::Type::getInt32Ty(*this->context), llvm::APInt(32, 0));
-    this->builder->CreateRet(zero);
 }
 
 void Compiler::compile(llvm::raw_ostream &outs, Body body)
