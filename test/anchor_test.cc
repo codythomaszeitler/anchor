@@ -80,3 +80,16 @@ TEST(AnchorTest, ItShouldPrintInteger)
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "5");
 }
+
+TEST(AnchorTest, ItShouldPrintResultOfSimpleAddition)
+{
+    std::string sourceCode =
+        R"(function integer main() {
+    print(5 + 3);
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "8");
+}
