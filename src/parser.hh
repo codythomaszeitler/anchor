@@ -17,6 +17,12 @@ namespace parser
         BAD
     };
 
+    enum class Type {
+        VOID,
+        INTEGER,
+        STRING
+    };
+
     class Stmt
     {
     public:
@@ -34,6 +40,7 @@ namespace parser
     {
     public:
         parser::ExprType type;
+        parser::Type returnType;
     };
 
     class FunctionStmt : public Stmt
@@ -41,6 +48,7 @@ namespace parser
     public:
         std::string identifier;
         std::vector<std::shared_ptr<Stmt>> stmts;
+        parser::Type returnType;
     };
 
     class ReturnStmt : public Stmt
@@ -135,6 +143,7 @@ namespace parser
 
         std::vector<std::string> args();
         std::string identifier();
+        parser::Type parseReturnType();
         std::vector<std::shared_ptr<Stmt>> block();
         std::shared_ptr<Stmt> stmt();
         std::shared_ptr<Stmt> functionStmt();

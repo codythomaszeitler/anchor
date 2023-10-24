@@ -27,6 +27,7 @@ namespace lexer
     enum class TokenType
     {
         INTEGER_TYPE,
+        VOID_TYPE,
         INTEGER,
         IDENTIFIER,
         VAL,

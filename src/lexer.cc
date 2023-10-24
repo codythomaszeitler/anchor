@@ -278,6 +278,14 @@ lexer::Token lexer::Lexer::parseKeywordOrIdentifier()
     {
         return lexer::Token(lexer::TokenType::PRINT, raw, start, end);
     }
+    else if ("integer" == raw)
+    {
+        return lexer::Token(lexer::TokenType::INTEGER_TYPE, raw, start, end);
+    }
+    else if ("void" == raw)
+    {
+        return lexer::Token(lexer::TokenType::VOID_TYPE, raw, start, end);
+    }
     else
     {
         return lexer::Token(lexer::TokenType::IDENTIFIER, raw, start, end);

@@ -4,7 +4,7 @@
 
 TEST(ParserTest, ItShouldParseFunctionDefinition)
 {
-    std::string sourceCode = "function foo() {return 3 + 5;};";
+    std::string sourceCode = "function integer foo() {return 3 + 5;};";
 
     std::deque<lexer::Token> tokens = lexer::lex(sourceCode);
 
@@ -16,14 +16,18 @@ TEST(ParserTest, ItShouldParseFunctionDefinition)
 
     std::shared_ptr<parser::FunctionStmt> functionStmt = program.get<parser::FunctionStmt>(0);
     EXPECT_EQ("foo", functionStmt->identifier);
+    EXPECT_EQ(parser::Type::INTEGER, functionStmt->returnType);
     EXPECT_EQ(parser::StmtType::FUNCTION, functionStmt.get()->type);
 
     EXPECT_EQ(1, functionStmt->stmts.size());
+
+    std::shared_ptr<parser::ReturnStmt> returnStmt = std::static_pointer_cast<parser::ReturnStmt>(functionStmt->stmts[0]);
+    EXPECT_EQ(parser::Type::INTEGER, returnStmt->expr->returnType);
 }
 
 TEST(ParserTest, ItShouldBeAbleToParserMainWithAPrint)
 {
-    std::string sourceCode = "function main() {print (\"Hello, World!\");};";
+    std::string sourceCode = "function void bar() {print (\"Hello, World!\");};";
 
     std::deque<lexer::Token> tokens = lexer::lex(sourceCode);
 
@@ -33,7 +37,7 @@ TEST(ParserTest, ItShouldBeAbleToParserMainWithAPrint)
     EXPECT_EQ(1, program.stmts.size());
 
     std::shared_ptr<parser::FunctionStmt> functionStmt = program.get<parser::FunctionStmt>(0);
-    EXPECT_EQ("main", functionStmt->identifier);
+    EXPECT_EQ("bar", functionStmt->identifier);
     EXPECT_EQ(parser::StmtType::FUNCTION, functionStmt.get()->type);
 
     EXPECT_EQ(1, functionStmt->stmts.size());
@@ -47,11 +51,12 @@ TEST(ParserTest, ItShouldBeAbleToParserMainWithAPrint)
 
     EXPECT_EQ(stringLiteralPointer->type, parser::ExprType::STRING_LITERAL);
     EXPECT_EQ("Hello, World!", stringLiteralPointer->literal);
+    EXPECT_EQ(parser::Type::STRING, stringLiteralPointer->returnType);
 }
 
 TEST(ParserTest, ItShouldBeAbleToParserPrintWithEmptyStringBody)
 {
-    std::string sourceCode = "function main() {print (\"\");};";
+    std::string sourceCode = "function void foo() {print (\"\");};";
 
     std::deque<lexer::Token> tokens = lexer::lex(sourceCode);
 
@@ -61,7 +66,7 @@ TEST(ParserTest, ItShouldBeAbleToParserPrintWithEmptyStringBody)
     EXPECT_EQ(1, program.stmts.size());
 
     std::shared_ptr<parser::FunctionStmt> functionStmt = program.get<parser::FunctionStmt>(0);
-    EXPECT_EQ("main", functionStmt->identifier);
+    EXPECT_EQ("foo", functionStmt->identifier);
     EXPECT_EQ(parser::StmtType::FUNCTION, functionStmt.get()->type);
 
     EXPECT_EQ(1, functionStmt->stmts.size());
@@ -81,7 +86,7 @@ TEST(ParserTest, ItShouldBeAbleToPrintAndRecoverFromBadStmt)
 {
     std::string sourceCode =
         R"(
-    function main() {
+    function void foo() {
         print"Hello World!");
         print("Hello World!");
     };)";

@@ -137,12 +137,14 @@ namespace parser
     {
         this->consume(lexer::TokenType::FUNCTION);
 
+        parser::Type returnType = this->parseReturnType();
         std::string identifier = this->identifier();
 
         this->args();
 
         parser::FunctionStmt *functionStmt = new parser::FunctionStmt();
         functionStmt->type = parser::StmtType::FUNCTION;
+        functionStmt->returnType = returnType;
         functionStmt->stmts = this->block();
         functionStmt->identifier = identifier;
         this->consume(lexer::TokenType::SEMICOLON);
@@ -179,6 +181,23 @@ namespace parser
     {
         lexer::Token token = this->pop();
         return token.getRaw();
+    }
+
+    parser::Type Parser::parseReturnType()
+    {
+        lexer::Token token = this->pop();
+        if (token.getTokenType() == lexer::TokenType::VOID_TYPE)
+        {
+            return parser::Type::VOID;
+        }
+        else if (token.getTokenType() == lexer::TokenType::INTEGER_TYPE)
+        {
+            return parser::Type::INTEGER;
+        }
+        else
+        {
+            throw parser::InvalidSyntaxException(token, std::vector<lexer::TokenType>{lexer::TokenType::VOID_TYPE, lexer::TokenType::INTEGER_TYPE});
+        }
     }
 
     std::vector<std::string> Parser::args()
@@ -246,6 +265,7 @@ namespace parser
         parser::StringLiteral *stringLiteral = new parser::StringLiteral();
         stringLiteral->literal = popped.getRaw().substr(1, popped.getRaw().length() - 2);
         stringLiteral->type = parser::ExprType::STRING_LITERAL;
+        stringLiteral->returnType = parser::Type::STRING;
         return std::shared_ptr<parser::Expr>(stringLiteral);
     }
 
@@ -256,6 +276,7 @@ namespace parser
         binaryOperation->operation = this->parseOperation();
         binaryOperation->right = this->parseInteger();
         binaryOperation->type = parser::ExprType::BINARY_OP;
+        binaryOperation->returnType = parser::Type::INTEGER;
         return std::shared_ptr<parser::Expr>(binaryOperation);
     }
 
@@ -267,6 +288,7 @@ namespace parser
         parser::IntegerLiteral *integerLiteral = new parser::IntegerLiteral();
         integerLiteral->integer = stoi(intAsString);
         integerLiteral->type = parser::ExprType::INTEGER_LITERAL;
+        integerLiteral->returnType = parser::Type::INTEGER;
         return std::shared_ptr<parser::Expr>(integerLiteral);
     }
 
