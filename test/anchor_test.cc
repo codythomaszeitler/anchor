@@ -67,3 +67,16 @@ TEST(AnchorTest, ItShouldPrintStringThatIsNotHelloWorld)
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "This is another test string!");
 }
+
+TEST(AnchorTest, ItShouldPrintInteger)
+{
+    std::string sourceCode =
+        R"(function integer main() {
+    print(5);
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "5");
+}
