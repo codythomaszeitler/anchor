@@ -2,7 +2,6 @@
 
 namespace compiler
 {
-
     Compiler::Compiler()
     {
         this->context = std::make_unique<llvm::LLVMContext>();
@@ -48,10 +47,14 @@ namespace compiler
         llvm::FunctionType *functionReturnType = llvm::FunctionType::get(llvm::Type::getInt32Ty(*this->context), true);
         llvm::Function *function = llvm::Function::Create(functionReturnType, llvm::Function::ExternalLinkage, functionStmt->identifier, this->compiling.get());
 
+        llvm::BasicBlock *prev = this->builder->GetInsertBlock();
+
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(*this->context, "", function);
         this->builder->SetInsertPoint(bb);
 
         this->compile(outs, functionStmt->stmts);
+
+        this->builder->SetInsertPoint(prev);
     }
 
     void Compiler::compile(llvm::raw_ostream &outs, Body body)
@@ -93,10 +96,15 @@ namespace compiler
             std::shared_ptr<parser::IntegerLiteral> integerLiteral = std::static_pointer_cast<parser::IntegerLiteral>(expr);
             return this->compile(outs, integerLiteral);
         }
-        else if (expr->type == parser::ExprType::BINARY_OP) 
+        else if (expr->type == parser::ExprType::BINARY_OP)
         {
             std::shared_ptr<parser::BinaryOperation> binaryOperation = std::static_pointer_cast<parser::BinaryOperation>(expr);
             return this->compile(outs, binaryOperation);
+        }
+        else if (expr->type == parser::ExprType::FUNCTION)
+        {
+            std::shared_ptr<parser::FunctionExpr> functionExpr = std::static_pointer_cast<parser::FunctionExpr>(expr);
+            return this->compile(outs, functionExpr);
         }
         else
         {
@@ -119,17 +127,17 @@ namespace compiler
     {
         return llvm::ConstantInt::getIntegerValue(llvm::Type::getInt32Ty(*this->context), llvm::APInt(32, integerLiteral->integer));
     }
-    
-    llvm::Value* Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::BinaryOperation> binaryOp)
+
+    llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::BinaryOperation> binaryOp)
     {
-        llvm::Value* left = this->compile(outs, binaryOp->left);
-        llvm::Value* right = this->compile(outs, binaryOp->right);
+        llvm::Value *left = this->compile(outs, binaryOp->left);
+        llvm::Value *right = this->compile(outs, binaryOp->right);
 
         if (binaryOp->operation == parser::Operation::ADD)
         {
             return this->builder->CreateAdd(left, right);
         }
-        else if (binaryOp->operation == parser::Operation::SUBTRACT) 
+        else if (binaryOp->operation == parser::Operation::SUBTRACT)
         {
             return this->builder->CreateSub(left, right);
         }
@@ -137,9 +145,15 @@ namespace compiler
         {
             return this->builder->CreateMul(left, right);
         }
-        else 
+        else
         {
             throw std::invalid_argument("Unsupported parser::Operation");
         }
+    }
+    
+    llvm::Value* Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::FunctionExpr> functionExpr)
+    {
+        llvm::Function* function = this->compiling->getFunction(llvm::StringRef(functionExpr->identifier));
+        return this->builder->CreateCall(function, std::vector<llvm::Value*>());
     }
 }

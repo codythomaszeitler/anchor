@@ -17,7 +17,8 @@ namespace parser
         BAD
     };
 
-    enum class Type {
+    enum class Type
+    {
         VOID,
         INTEGER,
         STRING
@@ -33,7 +34,8 @@ namespace parser
     {
         BINARY_OP,
         INTEGER_LITERAL,
-        STRING_LITERAL
+        STRING_LITERAL,
+        FUNCTION
     };
 
     class Expr
@@ -41,6 +43,13 @@ namespace parser
     public:
         parser::ExprType type;
         parser::Type returnType;
+    };
+
+    class FunctionExpr : public Expr
+    {
+    public:
+        std::string identifier;
+        std::vector<parser::Expr> args;
     };
 
     class FunctionStmt : public Stmt
@@ -65,7 +74,7 @@ namespace parser
         std::shared_ptr<Expr> expr;
     };
 
-    class BadStmt : public Stmt 
+    class BadStmt : public Stmt
     {
     public:
         lexer::Token offender;
@@ -106,6 +115,7 @@ namespace parser
     {
     private:
         static std::string parseMessage(lexer::Token offender, std::vector<lexer::TokenType> expected);
+
     public:
         lexer::Token offender;
         std::vector<lexer::TokenType> expected;
@@ -118,6 +128,7 @@ namespace parser
     {
     private:
         std::string message;
+
     public:
         ErrorLog(std::string);
         std::string getMessage();
@@ -154,6 +165,7 @@ namespace parser
         std::shared_ptr<parser::Expr> expr();
 
         std::shared_ptr<parser::Expr> parseStringLiteral();
+        std::shared_ptr<parser::Expr> parseFunctionExpr();
         std::shared_ptr<parser::Expr> parseInteger();
         parser::Operation parseOperation();
 

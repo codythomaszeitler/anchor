@@ -260,6 +260,10 @@ namespace parser
         {
             return this->parseStringLiteral();
         }
+        else if (peeked.getTokenType() == lexer::TokenType::IDENTIFIER) 
+        {
+            return this->parseFunctionExpr();
+        }
         else
         {
             std::shared_ptr<parser::Expr> expr = this->parseInteger();
@@ -286,6 +290,22 @@ namespace parser
         stringLiteral->type = parser::ExprType::STRING_LITERAL;
         stringLiteral->returnType = parser::Type::STRING;
         return std::shared_ptr<parser::Expr>(stringLiteral);
+    }
+    
+    std::shared_ptr<parser::Expr> Parser::parseFunctionExpr()
+    {
+        lexer::Token popped = this->pop();
+        std::string identifier = popped.getRaw();
+
+        parser::FunctionExpr* functionExpr = new parser::FunctionExpr();
+        functionExpr->identifier = identifier;
+        functionExpr->type = parser::ExprType::FUNCTION;
+        functionExpr->returnType = parser::Type::INTEGER;
+
+        this->consume(lexer::TokenType::LEFT_PAREN);
+        this->consume(lexer::TokenType::RIGHT_PAREN);
+
+        return std::shared_ptr<Expr>(functionExpr);
     }
 
     std::shared_ptr<parser::Expr> Parser::parseInteger()

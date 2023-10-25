@@ -119,3 +119,21 @@ TEST(AnchorTest, ItShouldPrintResultOfSimpleMultiplication)
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "15");
 }
+
+TEST(AnchorTest, ItShouldPrintResultOfFunctionWithNonComplexInteger)
+{
+    std::string sourceCode =R"(
+
+function integer foo() {
+    return 1;
+};
+
+function integer main() {
+    print(foo());
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "1");
+}
