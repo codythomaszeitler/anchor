@@ -216,7 +216,46 @@ function integer main() {
 };)";
 
     std::string llvmAnchor = anchor::compile(sourceCode);
-    std::cout << llvmAnchor << std::endl;
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "5");
+}
+
+TEST(AnchorTest, ItShouldUseLocalVarInAnotherFunction)
+{
+    std::string sourceCode =R"(
+
+function integer bar() {
+    integer a;
+    a = 3;
+    return a;
+};
+
+function integer main() {
+    integer a;
+    a = 5;
+    print(a + bar());
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "8");
+}
+
+TEST(AnchorTest, ItShouldUseTwoLocalVarsInAdditionStmt)
+{
+    std::string sourceCode =R"(
+function integer main() {
+    integer a;
+    a = 5;
+    integer b;
+    b = 4;
+
+    print(a + b);
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "9");
 }
