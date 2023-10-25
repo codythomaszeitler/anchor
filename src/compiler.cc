@@ -133,6 +133,10 @@ namespace compiler
         {
             return this->builder->CreateSub(left, right);
         }
+        else if (binaryOp->operation == parser::Operation::MULTIPLICATION)
+        {
+            return this->builder->CreateMul(left, right);
+        }
         else 
         {
             throw std::invalid_argument("Unsupported parser::Operation");

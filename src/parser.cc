@@ -251,7 +251,8 @@ namespace parser
         auto isBinaryOp = [](lexer::TokenType tokenType)
         {
             return tokenType == lexer::TokenType::PLUS_SIGN ||
-                   tokenType == lexer::TokenType::MINUS_SIGN;
+                   tokenType == lexer::TokenType::MINUS_SIGN || 
+                   tokenType == lexer::TokenType::MULT_SIGN;
         };
 
         lexer::Token peeked = this->peek();
@@ -310,6 +311,10 @@ namespace parser
         else if (operation.getTokenType() == lexer::TokenType::MINUS_SIGN)
         {
             return parser::Operation::SUBTRACT;
+        }
+        else if (operation.getTokenType() == lexer::TokenType::MULT_SIGN)
+        {
+            return parser::Operation::MULTIPLICATION;
         }
         else
         {
