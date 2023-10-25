@@ -248,6 +248,12 @@ namespace parser
 
     std::shared_ptr<parser::Expr> Parser::expr()
     {
+        auto isBinaryOp = [](lexer::TokenType tokenType)
+        {
+            return tokenType == lexer::TokenType::PLUS_SIGN ||
+                   tokenType == lexer::TokenType::MINUS_SIGN;
+        };
+
         lexer::Token peeked = this->peek();
         if (peeked.getTokenType() == lexer::TokenType::STRING)
         {
@@ -256,7 +262,7 @@ namespace parser
         else
         {
             std::shared_ptr<parser::Expr> expr = this->parseInteger();
-            if (this->peek().getTokenType() == lexer::TokenType::PLUS_SIGN)
+            if (isBinaryOp(this->peek().getTokenType()))
             {
                 parser::BinaryOperation *binaryOperation = new parser::BinaryOperation();
                 binaryOperation->left = expr;
@@ -295,7 +301,19 @@ namespace parser
 
     parser::Operation Parser::parseOperation()
     {
-        lexer::Token plus = this->pop();
-        return parser::Operation::ADD;
+        lexer::Token operation = this->pop();
+
+        if (operation.getTokenType() == lexer::TokenType::PLUS_SIGN)
+        {
+            return parser::Operation::ADD;
+        }
+        else if (operation.getTokenType() == lexer::TokenType::MINUS_SIGN)
+        {
+            return parser::Operation::SUBTRACT;
+        }
+        else
+        {
+            throw parser::InvalidSyntaxException(operation, std::vector<lexer::TokenType>{lexer::TokenType::PLUS_SIGN, lexer::TokenType::MINUS_SIGN});
+        }
     }
 }

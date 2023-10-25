@@ -120,11 +120,22 @@ namespace compiler
         return llvm::ConstantInt::getIntegerValue(llvm::Type::getInt32Ty(*this->context), llvm::APInt(32, integerLiteral->integer));
     }
     
-    llvm::Value* Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::BinaryOperation> integerLiteral)
+    llvm::Value* Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::BinaryOperation> binaryOp)
     {
-        llvm::Value* left = this->compile(outs, integerLiteral->left);
-        llvm::Value* right = this->compile(outs, integerLiteral->right);
-        llvm::Value* result = this->builder->CreateAdd(left, right);
-        return result;
+        llvm::Value* left = this->compile(outs, binaryOp->left);
+        llvm::Value* right = this->compile(outs, binaryOp->right);
+
+        if (binaryOp->operation == parser::Operation::ADD)
+        {
+            return this->builder->CreateAdd(left, right);
+        }
+        else if (binaryOp->operation == parser::Operation::SUBTRACT) 
+        {
+            return this->builder->CreateSub(left, right);
+        }
+        else 
+        {
+            throw std::invalid_argument("Unsupported parser::Operation");
+        }
     }
 }

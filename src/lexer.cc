@@ -47,6 +47,7 @@ std::string lexer::tostring(lexer::TokenType tokenType)
         map[lexer::TokenType::IDENTIFIER] = "IDENTIFIER";
         map[lexer::TokenType::VAL] = "VAL";
         map[lexer::TokenType::PLUS_SIGN] = "PLUS_SIGN";
+        map[lexer::TokenType::MINUS_SIGN] = "MINUS_SIGN";
         map[lexer::TokenType::EQUALS] = "EQUALS";
         map[lexer::TokenType::SEMICOLON] = "SEMICOLON";
         map[lexer::TokenType::FUNCTION] = "FUNCTION";
@@ -140,6 +141,11 @@ lexer::Token lexer::Lexer::next()
     if (peekChar() == '+')
     {
         return parseSingleCharacterTokenType(lexer::TokenType::PLUS_SIGN);
+    }
+
+    if (peekChar() == '-')
+    {
+        return parseSingleCharacterTokenType(lexer::TokenType::MINUS_SIGN);
     }
 
     if (peekChar() == '"')

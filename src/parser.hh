@@ -88,7 +88,8 @@ namespace parser
 
     enum class Operation
     {
-        ADD
+        ADD,
+        SUBTRACT
     };
 
     class BinaryOperation : public Expr
