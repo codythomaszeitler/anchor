@@ -1,4 +1,8 @@
+function integer foo() {
+    return 1;
+};
+
 function integer main() {
-    print(3 + 5);
+    print(foo());
     return 0;
 };

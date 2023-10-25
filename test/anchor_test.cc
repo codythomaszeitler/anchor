@@ -137,3 +137,93 @@ function integer main() {
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "1");
 }
+
+TEST(AnchorTest, ItShouldPrintResultOfFunctionWithAnotherFunctionCall)
+{
+    std::string sourceCode =R"(
+
+function integer bar() {
+    return 2;
+};
+
+function integer foo() {
+    return bar();
+};
+
+function integer main() {
+    print(foo());
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "2");
+}
+
+TEST(AnchorTest, ItShouldPrintResultOfFunctionAddedWithConstantOnLeftSide)
+{
+    std::string sourceCode =R"(
+
+function integer bar() {
+    return 2;
+};
+
+function integer foo() {
+    return 3 + bar();
+};
+
+function integer main() {
+    print(foo());
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "5");
+}
+
+TEST(AnchorTest, ItShouldPrintResultOfFunctionAddedWithConstantOnRightSide)
+{
+    std::string sourceCode =R"(
+
+function integer bar() {
+    print("In Bar");
+    return 2;
+};
+
+function integer foo() {
+    return bar() + 3;
+};
+
+function integer main() {
+    print(foo());
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "In Bar5");
+}
+
+TEST(AnchorTest, ItShouldPrintResultOfFunctionAddedWithConstantOnRightSide)
+{
+    std::string sourceCode =R"(
+
+function integer bar() {
+    print("In Bar");
+    return 2;
+};
+
+function integer foo() {
+    return bar() + 3;
+};
+
+function integer main() {
+    print(foo());
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "In Bar5");
+}
