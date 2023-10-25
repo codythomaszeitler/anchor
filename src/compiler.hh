@@ -21,6 +21,7 @@ namespace compiler {
         std::unique_ptr<llvm::LLVMContext> context;
         std::unique_ptr<llvm::Module> compiling; 
         std::unique_ptr<llvm::IRBuilder<>> builder;
+
         void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::FunctionStmt> functionStmt);
         void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::PrintStmt> printStmt);
         void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::ReturnStmt> returnStmt);
@@ -29,6 +30,7 @@ namespace compiler {
         llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::StringLiteral> stringLiteral);
         llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::IntegerLiteral> integerLiteral);
         llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::BinaryOperation> integerLiteral);
+        llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::FunctionExpr> functionExpr);
     
         using Body = std::vector<std::shared_ptr<parser::Stmt>>;
         void compile(llvm::raw_ostream &outs, Body functionStmt);
