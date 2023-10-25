@@ -25,12 +25,15 @@ namespace compiler {
         void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::FunctionStmt> functionStmt);
         void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::PrintStmt> printStmt);
         void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::ReturnStmt> returnStmt);
+        void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarDeclStmt> varDeclStmt);
+        void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarAssignmentStmt> varAssignmentStmt);
         void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::Stmt> stmt);
         llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::Expr> expr);
         llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::StringLiteral> stringLiteral);
         llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::IntegerLiteral> integerLiteral);
         llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::BinaryOperation> integerLiteral);
         llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::FunctionExpr> functionExpr);
+        llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarExpr> varExpr);
     
         using Body = std::vector<std::shared_ptr<parser::Stmt>>;
         void compile(llvm::raw_ostream &outs, Body functionStmt);

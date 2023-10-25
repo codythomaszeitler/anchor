@@ -1,4 +1,5 @@
 #include "src/compiler.hh"
+#include "llvm/IR/ValueSymbolTable.h"
 
 namespace compiler
 {
@@ -39,6 +40,16 @@ namespace compiler
         {
             std::shared_ptr<parser::ReturnStmt> returnStmt = std::static_pointer_cast<parser::ReturnStmt>(stmt);
             this->compile(outs, returnStmt);
+        }
+        else if (stmt->type == parser::StmtType::VAR_DECL)
+        {
+            std::shared_ptr<parser::VarDeclStmt> varDeclStmt = std::static_pointer_cast<parser::VarDeclStmt>(stmt);
+            this->compile(outs, varDeclStmt);
+        }
+        else if (stmt->type == parser::StmtType::VAR_ASSIGNMENT)
+        {
+            std::shared_ptr<parser::VarAssignmentStmt> varAssignmentStmt = std::static_pointer_cast<parser::VarAssignmentStmt>(stmt);
+            this->compile(outs, varAssignmentStmt);
         }
     }
 
@@ -106,6 +117,11 @@ namespace compiler
             std::shared_ptr<parser::FunctionExpr> functionExpr = std::static_pointer_cast<parser::FunctionExpr>(expr);
             return this->compile(outs, functionExpr);
         }
+        else if (expr->type == parser::ExprType::VAR)
+        {
+            std::shared_ptr<parser::VarExpr> varExpr = std::static_pointer_cast<parser::VarExpr>(expr);
+            return this->compile(outs, varExpr);
+        }
         else
         {
             throw std::invalid_argument("Unsupported expression type.");
@@ -150,10 +166,32 @@ namespace compiler
             throw std::invalid_argument("Unsupported parser::Operation");
         }
     }
-    
-    llvm::Value* Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::FunctionExpr> functionExpr)
+
+    llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::FunctionExpr> functionExpr)
     {
-        llvm::Function* function = this->compiling->getFunction(llvm::StringRef(functionExpr->identifier));
-        return this->builder->CreateCall(function, std::vector<llvm::Value*>());
+        llvm::Function *function = this->compiling->getFunction(llvm::StringRef(functionExpr->identifier));
+        return this->builder->CreateCall(function, std::vector<llvm::Value *>());
+    }
+    
+    void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarDeclStmt> varDeclStmt)
+    {
+        llvm::Value* value = this->builder->CreateAlloca(llvm::Type::getInt32Ty(*this->context), nullptr, varDeclStmt->identifier);
+        llvm::Value* zero = llvm::ConstantInt::getIntegerValue(llvm::Type::getInt32Ty(*this->context), llvm::APInt(32, 0));
+        this->builder->CreateStore(zero, value);
+    }
+    
+    void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarAssignmentStmt> varAssignmentStmt)
+    {
+        llvm::BasicBlock* bb = this->builder->GetInsertBlock();
+        llvm::Value* value = bb->getValueSymbolTable()->lookup(llvm::StringRef(varAssignmentStmt->identifier));
+        llvm::Value* rhs = this->compile(outs, varAssignmentStmt->expr);
+        this->builder->CreateStore(rhs, value);
+    }
+    
+    llvm::Value* Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarExpr> varExpr)
+    {
+        llvm::BasicBlock* bb = this->builder->GetInsertBlock();
+        llvm::Value* value = bb->getValueSymbolTable()->lookup(llvm::StringRef(varExpr->identifier));
+        return this->builder->CreateLoad(llvm::Type::getInt32Ty(*this->context), value);
     }
 }

@@ -92,6 +92,11 @@ namespace parser
 
     std::shared_ptr<Stmt> Parser::stmt()
     {
+        auto isType = [](lexer::TokenType tokenType)
+        {
+            return tokenType == lexer::TokenType::INTEGER_TYPE;
+        };
+
         lexer::Token maybeReturnOrFunctionDefinition = this->peek();
 
         try
@@ -104,9 +109,17 @@ namespace parser
             {
                 return this->printStmt();
             }
-            else
+            else if (isType(maybeReturnOrFunctionDefinition.getTokenType()))
+            {
+                return this->varDeclStmt();
+            }
+            else if (maybeReturnOrFunctionDefinition.getTokenType() == lexer::TokenType::FUNCTION)
             {
                 return this->functionStmt();
+            }
+            else
+            {
+                return this->varAssignmentStmt();
             }
         }
         catch (parser::InvalidSyntaxException &ise)
@@ -177,9 +190,44 @@ namespace parser
         return returnStmt;
     }
 
+    std::shared_ptr<Stmt> Parser::varDeclStmt()
+    {
+        lexer::Token variableType = this->pop();
+        std::string identifier = this->identifier();
+
+        this->consume(lexer::TokenType::SEMICOLON);
+
+        std::shared_ptr<parser::VarDeclStmt> varDeclStmt = std::make_shared<parser::VarDeclStmt>();
+        varDeclStmt->identifier = identifier;
+        varDeclStmt->type = parser::StmtType::VAR_DECL;
+        varDeclStmt->variableType = parser::Type::INTEGER;
+
+        return varDeclStmt;
+    }
+
+    std::shared_ptr<Stmt> Parser::varAssignmentStmt()
+    {
+        std::string identifier = this->identifier();
+
+        this->consume(lexer::TokenType::EQUALS);
+
+        std::shared_ptr<parser::VarAssignmentStmt> varAssignmentStmt = std::make_shared<parser::VarAssignmentStmt>();
+        varAssignmentStmt->identifier = identifier;
+        varAssignmentStmt->type = parser::StmtType::VAR_ASSIGNMENT;
+        varAssignmentStmt->expr = this->expr();
+
+        this->consume(lexer::TokenType::SEMICOLON);
+
+        return varAssignmentStmt;
+    }
+
     std::string Parser::identifier()
     {
         lexer::Token token = this->pop();
+        if (token.getTokenType() != lexer::TokenType::IDENTIFIER)
+        {
+            throw parser::InvalidSyntaxException(token, std::vector<lexer::TokenType>{lexer::TokenType::IDENTIFIER});
+        }
         return token.getRaw();
     }
 
@@ -264,7 +312,7 @@ namespace parser
         }
         else if (peeked.getTokenType() == lexer::TokenType::IDENTIFIER)
         {
-            lhs = this->parseFunctionExpr();
+            lhs = this->parseFunctionOrVarExpr();
         }
         else if (peeked.getTokenType() == lexer::TokenType::INTEGER)
         {
@@ -295,20 +343,27 @@ namespace parser
         return std::shared_ptr<parser::Expr>(stringLiteral);
     }
 
-    std::shared_ptr<parser::Expr> Parser::parseFunctionExpr()
+    std::shared_ptr<parser::Expr> Parser::parseFunctionOrVarExpr()
     {
-        lexer::Token popped = this->pop();
-        std::string identifier = popped.getRaw();
+        std::string identifier = this->identifier();
+        if (this->peek().getTokenType() == lexer::TokenType::LEFT_PAREN)
+        {
+            parser::FunctionExpr *functionExpr = new parser::FunctionExpr();
+            functionExpr->identifier = identifier;
+            functionExpr->type = parser::ExprType::FUNCTION;
+            functionExpr->returnType = parser::Type::INTEGER;
 
-        parser::FunctionExpr *functionExpr = new parser::FunctionExpr();
-        functionExpr->identifier = identifier;
-        functionExpr->type = parser::ExprType::FUNCTION;
-        functionExpr->returnType = parser::Type::INTEGER;
+            this->consume(lexer::TokenType::LEFT_PAREN);
+            this->consume(lexer::TokenType::RIGHT_PAREN);
 
-        this->consume(lexer::TokenType::LEFT_PAREN);
-        this->consume(lexer::TokenType::RIGHT_PAREN);
-
-        return std::shared_ptr<Expr>(functionExpr);
+            return std::shared_ptr<Expr>(functionExpr);
+        } else {
+            std::shared_ptr<parser::VarExpr> varExpr = std::make_shared<parser::VarExpr>();
+            varExpr->identifier = identifier;
+            varExpr->returnType = parser::Type::INTEGER;
+            varExpr->type = parser::ExprType::VAR;
+            return std::static_pointer_cast<parser::Expr>(varExpr);
+        }
     }
 
     std::shared_ptr<parser::Expr> Parser::parseInteger()

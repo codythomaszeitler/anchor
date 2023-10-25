@@ -14,6 +14,8 @@ namespace parser
         FUNCTION,
         RETURN,
         PRINT,
+        VAR_DECL,
+        VAR_ASSIGNMENT,
         BAD
     };
 
@@ -35,6 +37,7 @@ namespace parser
         BINARY_OP,
         INTEGER_LITERAL,
         STRING_LITERAL,
+        VAR,
         FUNCTION
     };
 
@@ -52,12 +55,32 @@ namespace parser
         std::vector<parser::Expr> args;
     };
 
+    class VarExpr : public Expr
+    {
+    public:
+        std::string identifier;
+    };
+
     class FunctionStmt : public Stmt
     {
     public:
         std::string identifier;
         std::vector<std::shared_ptr<Stmt>> stmts;
         parser::Type returnType;
+    };
+
+    class VarDeclStmt : public Stmt
+    {
+    public:
+        std::string identifier;
+        parser::Type variableType;
+    };
+
+    class VarAssignmentStmt : public Stmt
+    {
+    public:
+        std::string identifier;
+        std::shared_ptr<parser::Expr> expr;
     };
 
     class ReturnStmt : public Stmt
@@ -162,10 +185,12 @@ namespace parser
         std::shared_ptr<Stmt> functionStmt();
         std::shared_ptr<Stmt> printStmt();
         std::shared_ptr<Stmt> returnStmt();
+        std::shared_ptr<Stmt> varDeclStmt();
+        std::shared_ptr<Stmt> varAssignmentStmt();
         std::shared_ptr<parser::Expr> expr();
 
         std::shared_ptr<parser::Expr> parseStringLiteral();
-        std::shared_ptr<parser::Expr> parseFunctionExpr();
+        std::shared_ptr<parser::Expr> parseFunctionOrVarExpr();
         std::shared_ptr<parser::Expr> parseInteger();
         parser::Operation parseOperation();
 

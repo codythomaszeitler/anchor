@@ -205,25 +205,18 @@ function integer main() {
     EXPECT_EQ(output, "In Bar5");
 }
 
-TEST(AnchorTest, ItShouldPrintResultOfFunctionAddedWithConstantOnRightSide)
+TEST(AnchorTest, ItShouldUseVariableToHoldIntegerAndPrint)
 {
     std::string sourceCode =R"(
-
-function integer bar() {
-    print("In Bar");
-    return 2;
-};
-
-function integer foo() {
-    return bar() + 3;
-};
-
 function integer main() {
-    print(foo());
+    integer a;
+    a = 5;
+    print(a);
     return 0;
 };)";
 
     std::string llvmAnchor = anchor::compile(sourceCode);
+    std::cout << llvmAnchor << std::endl;
     std::string output = runAnchor(llvmAnchor);
-    EXPECT_EQ(output, "In Bar5");
+    EXPECT_EQ(output, "5");
 }
