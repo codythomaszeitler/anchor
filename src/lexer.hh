@@ -32,6 +32,7 @@ namespace lexer
         IDENTIFIER,
         VAL,
         PLUS_SIGN,
+        MINUS_SIGN,
         EQUALS,
         SEMICOLON,
         FUNCTION,
