@@ -106,3 +106,16 @@ TEST(AnchorTest, ItShouldPrintResultOfSimpleSubtraction)
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "2");
 }
+
+TEST(AnchorTest, ItShouldPrintResultOfSimpleMultiplication)
+{
+    std::string sourceCode =
+        R"(function integer main() {
+    print(5 * 3);
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "15");
+}

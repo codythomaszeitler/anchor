@@ -33,6 +33,7 @@ namespace lexer
         VAL,
         PLUS_SIGN,
         MINUS_SIGN,
+        MULT_SIGN,
         EQUALS,
         SEMICOLON,
         FUNCTION,
