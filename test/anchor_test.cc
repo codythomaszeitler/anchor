@@ -409,3 +409,25 @@ function integer main() {
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "");
 }
+
+
+TEST(AnchorTest, ItShouldTakeWhileLoopWhileConditionTrue)
+{
+    std::string sourceCode =R"(
+
+function integer main() {
+    integer a;
+    a = 0;
+    while (a < 3) 
+    {
+        print (a);
+        a = a + 1;
+    };
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::cout << llvmAnchor << std::endl;
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "012");
+}

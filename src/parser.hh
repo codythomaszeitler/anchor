@@ -18,6 +18,7 @@ namespace parser
         VAR_ASSIGNMENT,
         FUNCTION_ARG,
         IF,
+        WHILE,
         BAD
     };
 
@@ -88,6 +89,13 @@ namespace parser
     };
 
     class IfStmt : public Stmt
+    {
+    public:
+        std::shared_ptr<parser::Expr> condition;
+        std::vector<std::shared_ptr<Stmt>> stmts;
+    };
+
+    class WhileStmt : public Stmt
     {
     public:
         std::shared_ptr<parser::Expr> condition;
@@ -211,6 +219,7 @@ namespace parser
         std::shared_ptr<Stmt> functionStmt();
         std::shared_ptr<Stmt> printStmt();
         std::shared_ptr<Stmt> ifStmt();
+        std::shared_ptr<Stmt> whileStmt();
         std::shared_ptr<Stmt> returnStmt();
         std::shared_ptr<Stmt> varDeclStmt();
         std::shared_ptr<Stmt> varAssignmentStmt();
