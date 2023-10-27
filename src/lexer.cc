@@ -320,6 +320,10 @@ lexer::Token lexer::Lexer::parseKeywordOrIdentifier()
     {
         return lexer::Token(lexer::TokenType::FALSE, raw, start, end);
     }
+    else if ("if" == raw)
+    {
+        return lexer::Token(lexer::TokenType::IF, raw, start, end);
+    }
     else
     {
         return lexer::Token(lexer::TokenType::IDENTIFIER, raw, start, end);

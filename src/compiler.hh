@@ -28,6 +28,8 @@ namespace compiler {
         void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarDeclStmt> varDeclStmt);
         void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarAssignmentStmt> varAssignmentStmt);
         void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::Stmt> stmt);
+        void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::IfStmt> ifStmt);
+
         llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::Expr> expr);
         llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::StringLiteral> stringLiteral);
         llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::IntegerLiteral> integerLiteral);
