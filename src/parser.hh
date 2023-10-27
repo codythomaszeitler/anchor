@@ -207,9 +207,17 @@ namespace parser
         std::vector<parser::ErrorLog> errors;
     };
 
+    class Context {
+    public:
+        parser::Context* parent;
+        std::map<std::string, parser::Type> varIdToVarType;
+    };
+
     class Parser
     {
     private:
+        parser::Context context;
+
         std::deque<lexer::Token> tokens;
         parser::Program compiling;
 

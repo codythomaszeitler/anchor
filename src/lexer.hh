@@ -28,6 +28,7 @@ namespace lexer
     {
         INTEGER_TYPE,
         BOOLEAN_TYPE,
+        STRING_TYPE,
         VOID_TYPE,
         INTEGER,
         IDENTIFIER,

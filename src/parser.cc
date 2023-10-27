@@ -94,7 +94,7 @@ namespace parser
     {
         auto isType = [](lexer::TokenType tokenType)
         {
-            return tokenType == lexer::TokenType::INTEGER_TYPE || tokenType == lexer::TokenType::BOOLEAN_TYPE;
+            return tokenType == lexer::TokenType::INTEGER_TYPE || tokenType == lexer::TokenType::BOOLEAN_TYPE || tokenType == lexer::TokenType::STRING_TYPE;
         };
 
         lexer::Token maybeReturnOrFunctionDefinition = this->peek();
@@ -161,6 +161,10 @@ namespace parser
         parser::Type returnType = this->parseReturnType();
         std::string identifier = this->identifier();
 
+        parser::Context parent = this->context;
+        this->context = parser::Context();
+        this->context.parent = &parent;
+
         std::vector<std::shared_ptr<parser::FunctionArgStmt>> args = this->args();
 
         parser::FunctionStmt *functionStmt = new parser::FunctionStmt();
@@ -169,6 +173,8 @@ namespace parser
         functionStmt->stmts = this->block();
         functionStmt->identifier = identifier;
         functionStmt->args = args;
+
+        this->context = parent;
 
         this->consume(lexer::TokenType::SEMICOLON);
         return std::shared_ptr<Stmt>(functionStmt);
@@ -252,10 +258,16 @@ namespace parser
         {
             varDeclStmt->variableType = parser::Type::BOOLEAN;
         }
+        else if (variableType.getTokenType() == lexer::TokenType::STRING_TYPE)
+        {
+            varDeclStmt->variableType = parser::Type::STRING;
+        }
         else
         {
             throw parser::InvalidSyntaxException(variableType, std::vector<lexer::TokenType>{lexer::TokenType::INTEGER_TYPE, lexer::TokenType::BOOLEAN_TYPE});
         }
+
+        this->context.varIdToVarType[varDeclStmt->identifier] = varDeclStmt->variableType;
 
         return varDeclStmt;
     }
@@ -318,6 +330,8 @@ namespace parser
             arg->identifier = identifier;
             arg->returnType = parser::Type::INTEGER;
 
+            this->context.varIdToVarType[arg->identifier] = arg->returnType;
+
             args.push_back(arg);
 
             if (this->peek().getTokenType() == lexer::TokenType::SEMICOLON)
@@ -335,10 +349,16 @@ namespace parser
         this->consume(lexer::TokenType::LEFT_BRACKET);
         std::vector<std::shared_ptr<Stmt>> stmts;
 
+        parser::Context parent = this->context;
+
+        this->context = parser::Context();
+        this->context.parent = &parent;
         while (this->peek().getTokenType() != lexer::TokenType::RIGHT_BRACKET)
         {
             stmts.push_back(this->stmt());
         }
+
+        this->context = parent;
 
         this->consume(lexer::TokenType::RIGHT_BRACKET);
         return stmts;
@@ -472,7 +492,7 @@ namespace parser
         {
             std::shared_ptr<parser::VarExpr> varExpr = std::make_shared<parser::VarExpr>();
             varExpr->identifier = identifier;
-            varExpr->returnType = parser::Type::INTEGER;
+            varExpr->returnType = this->context.varIdToVarType[varExpr->identifier];
             varExpr->type = parser::ExprType::VAR;
             return std::static_pointer_cast<parser::Expr>(varExpr);
         }
