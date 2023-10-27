@@ -220,7 +220,18 @@ namespace compiler
     {
         llvm::BasicBlock *bb = this->builder->GetInsertBlock();
         llvm::Value *value = bb->getValueSymbolTable()->lookup(llvm::StringRef(varExpr->identifier));
-        return this->builder->CreateLoad(llvm::Type::getInt32Ty(*this->context), value);
+
+        if (varExpr->returnType == parser::Type::BOOLEAN) {
+            return this->builder->CreateLoad(llvm::Type::getInt1Ty(*this->context), value);
+        } 
+        else if (varExpr->returnType == parser::Type::INTEGER) 
+        {
+            return this->builder->CreateLoad(llvm::Type::getInt32Ty(*this->context), value);
+        }
+        else 
+        {
+            throw std::invalid_argument("Cannot compile variable expression with unknown type.");
+        }
     }
 
     llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::BooleanLiteralExpr> booleanLiteralExpr)
