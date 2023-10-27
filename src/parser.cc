@@ -337,6 +337,11 @@ namespace parser
                    tokenType == lexer::TokenType::MULT_SIGN;
         };
 
+        auto isBooleanBinaryOp = [](lexer::TokenType tokenType) 
+        {
+            return tokenType == lexer::TokenType::LESS_THAN_SIGN;
+        };
+
         lexer::Token peeked = this->peek();
 
         std::shared_ptr<parser::Expr> lhs;
@@ -367,6 +372,17 @@ namespace parser
             binaryOperation->type = parser::ExprType::BINARY_OP;
             binaryOperation->returnType = parser::Type::INTEGER;
             return std::shared_ptr<parser::Expr>(binaryOperation);
+        }
+
+        if (isBooleanBinaryOp(this->peek().getTokenType()))
+        {
+            std::shared_ptr<parser::BinaryOperation> binaryOperation = std::make_shared<parser::BinaryOperation>();
+            binaryOperation->left = lhs;
+            binaryOperation->operation = this->parseOperation();
+            binaryOperation->right = this->expr();
+            binaryOperation->type = parser::ExprType::BINARY_OP;
+            binaryOperation->returnType = parser::Type::BOOLEAN;
+            return binaryOperation;
         }
 
         return lhs;
@@ -470,6 +486,10 @@ namespace parser
         else if (operation.getTokenType() == lexer::TokenType::MULT_SIGN)
         {
             return parser::Operation::MULTIPLICATION;
+        }
+        else if (operation.getTokenType() == lexer::TokenType::LESS_THAN_SIGN)
+        {
+            return parser::Operation::LESS_THAN;
         }
         else
         {

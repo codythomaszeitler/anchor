@@ -139,7 +139,8 @@ namespace parser
     {
         ADD,
         SUBTRACT,
-        MULTIPLICATION
+        MULTIPLICATION,
+        LESS_THAN
     };
 
     class BinaryOperation : public Expr
