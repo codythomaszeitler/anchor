@@ -473,7 +473,7 @@ function integer main() {
     EXPECT_EQ(output, "2");
 }
 
-TEST(AnchorTest, ItShouldUseDoubleEquals)
+TEST(AnchorTest, ItShouldUseDoubleEqualsOnTrue)
 {
     std::string sourceCode =R"(
 function integer main() {
@@ -487,4 +487,20 @@ function integer main() {
     std::string llvmAnchor = anchor::compile(sourceCode);
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "2");
+}
+
+TEST(AnchorTest, ItShouldUseDoubleEqualsOnFalse)
+{
+    std::string sourceCode =R"(
+function integer main() {
+    if (3 == 2) 
+    {
+        print ("2");
+    };
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "");
 }
