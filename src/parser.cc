@@ -381,7 +381,8 @@ namespace parser
         auto isBooleanBinaryOp = [](lexer::TokenType tokenType)
         {
             return tokenType == lexer::TokenType::LESS_THAN_SIGN
-                || tokenType == lexer::TokenType::GREATER_THAN_SIGN;
+                || tokenType == lexer::TokenType::GREATER_THAN_SIGN
+                || tokenType == lexer::TokenType::DOUBLE_EQUALS;
         };
 
         lexer::Token peeked = this->peek();
@@ -536,6 +537,10 @@ namespace parser
         else if (operation.getTokenType() == lexer::TokenType::GREATER_THAN_SIGN) 
         {
             return parser::Operation::GREATER_THAN;
+        }
+        else if (operation.getTokenType() == lexer::TokenType::DOUBLE_EQUALS) 
+        {
+            return parser::Operation::EQUALS;
         }
         else
         {
