@@ -431,3 +431,30 @@ function integer main() {
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "012");
 }
+
+TEST(AnchorTest, ItShouldDoFunctionCallWithWhileLoopInIt)
+{
+    std::string sourceCode =R"(
+
+function integer loopMe() {
+    integer a;
+    a = 0;
+    while (a < 3) 
+    {
+        a = a + 1;
+    };
+    return a;
+};
+
+function integer main() {
+    integer a;
+    a = loopMe();
+    print (a); 
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::cout << llvmAnchor << std::endl;
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "3");
+}
