@@ -38,6 +38,7 @@ namespace lexer
         LESS_THAN_SIGN,
         GREATER_THAN_SIGN,
         EQUALS,
+        DOUBLE_EQUALS,
         SEMICOLON,
         FUNCTION,
         LEFT_PAREN,

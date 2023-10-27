@@ -169,7 +169,7 @@ lexer::Token lexer::Lexer::next()
         return parseSingleCharacterTokenType(lexer::TokenType::LESS_THAN_SIGN);
     }
 
-    if (peekChar() == '>') 
+    if (peekChar() == '>')
     {
         return parseSingleCharacterTokenType(lexer::TokenType::GREATER_THAN_SIGN);
     }
@@ -200,7 +200,20 @@ lexer::Token lexer::Lexer::next()
 
 lexer::Token lexer::Lexer::parseEquals()
 {
-    return parseSingleCharacterTokenType(lexer::TokenType::EQUALS);
+    lexer::Token singleEquals = parseSingleCharacterTokenType(lexer::TokenType::EQUALS);
+
+    if (peekChar() == '=')
+    {
+        popChar();
+        return lexer::Token(lexer::TokenType::DOUBLE_EQUALS,
+                            "==",
+                            singleEquals.getStart(),
+                            lexer::Location(this->currentLine, this->currentColumn - 1));
+    }
+    else
+    {
+        return singleEquals;
+    }
 }
 
 lexer::Token lexer::Lexer::parseSemicolon()

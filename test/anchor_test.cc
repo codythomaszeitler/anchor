@@ -472,3 +472,19 @@ function integer main() {
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "2");
 }
+
+TEST(AnchorTest, ItShouldUseDoubleEquals)
+{
+    std::string sourceCode =R"(
+function integer main() {
+    if (3 == 3) 
+    {
+        print ("2");
+    };
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "2");
+}

@@ -197,6 +197,10 @@ namespace compiler
         {
             return this->builder->CreateICmpSGT(left, right);
         }
+        else if (binaryOp->operation == parser::Operation::EQUALS)
+        {
+            return this->builder->CreateICmpEQ(left, right);
+        }
         else
         {
             throw std::invalid_argument("Unsupported parser::Operation");
