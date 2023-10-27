@@ -315,3 +315,17 @@ function integer main() {
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "1");
 }
+
+TEST(AnchorTest, ItShouldPrintFalseExpression)
+{
+    std::string sourceCode =R"(
+
+function integer main() {
+    print(false);
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "0");
+}
