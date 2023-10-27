@@ -164,6 +164,11 @@ lexer::Token lexer::Lexer::next()
         return parseSingleCharacterTokenType(lexer::TokenType::SEMICOLON);
     }
 
+    if (peekChar() == '<')
+    {
+        return parseSingleCharacterTokenType(lexer::TokenType::LESS_THAN_SIGN);
+    }
+
     if (isdigit(peekChar()))
     {
         return this->parseNumber();

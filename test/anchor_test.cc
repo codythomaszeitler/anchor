@@ -361,3 +361,17 @@ function integer main() {
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "0");
 }
+
+TEST(AnchorTest, ItShouldRunLessThanBooleanExpression)
+{
+    std::string sourceCode =R"(
+
+function integer main() {
+    print(3 < 5);
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "1");
+}

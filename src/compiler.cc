@@ -179,6 +179,10 @@ namespace compiler
         {
             return this->builder->CreateMul(left, right);
         }
+        else if (binaryOp->operation == parser::Operation::LESS_THAN)
+        {
+            return this->builder->CreateICmpSLT(left, right);
+        }
         else
         {
             throw std::invalid_argument("Unsupported parser::Operation");
