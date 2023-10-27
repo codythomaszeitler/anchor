@@ -508,14 +508,25 @@ function integer main() {
 TEST(AnchorTest, ItShouldDoStringVarDeclAndAssign)
 {
     std::string sourceCode =R"(
+
+function integer bar() {
+    string a;
+    a = "2";
+    print(a);
+    return 0;
+};
+
 function integer main() {
     string a;
     a = "Hello, World!";
     print(a); 
+    integer b;
+    b = bar();
+    print(b);
     return 0;
 };)";
 
     std::string llvmAnchor = anchor::compile(sourceCode);
     std::string output = runAnchor(llvmAnchor);
-    EXPECT_EQ(output, "Hello, World!");
+    EXPECT_EQ(output, "Hello, World!20");
 }
