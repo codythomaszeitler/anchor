@@ -259,3 +259,25 @@ function integer main() {
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "9");
 }
+
+TEST(AnchorTest, ItShouldBeAbleToUseOneArgFunction)
+{
+    std::string sourceCode =R"(
+
+function integer bar(integer a) {
+    return 5 + a;
+};
+
+function integer main() {
+    integer a;
+    a = 5;
+
+    print(a + bar(5));
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::cout << llvmAnchor << std::endl;
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "15");
+}

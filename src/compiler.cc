@@ -55,8 +55,21 @@ namespace compiler
 
     void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::FunctionStmt> functionStmt)
     {
-        llvm::FunctionType *functionReturnType = llvm::FunctionType::get(llvm::Type::getInt32Ty(*this->context), true);
+        std::vector<llvm::Type *> args;
+        for (const auto &arg : functionStmt->args)
+        {
+            args.push_back(llvm::Type::getInt64PtrTy(*this->context));
+        }
+
+        llvm::FunctionType *functionReturnType = llvm::FunctionType::get(llvm::Type::getInt32Ty(*this->context), args, true);
         llvm::Function *function = llvm::Function::Create(functionReturnType, llvm::Function::ExternalLinkage, functionStmt->identifier, this->compiling.get());
+
+        for (int i = 0; i < functionStmt->args.size(); i++) 
+        {
+            const auto astArg = functionStmt->args[i];
+            const auto llvmArg = function->getArg(i);
+            llvmArg->setName(astArg->identifier);
+        }
 
         llvm::BasicBlock *prev = this->builder->GetInsertBlock();
 
@@ -170,28 +183,38 @@ namespace compiler
     llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::FunctionExpr> functionExpr)
     {
         llvm::Function *function = this->compiling->getFunction(llvm::StringRef(functionExpr->identifier));
-        return this->builder->CreateCall(function, std::vector<llvm::Value *>());
+
+        std::vector<llvm::Value *> args;
+        for (const auto &arg : functionExpr->args)
+        {
+            llvm::Value *value = this->compile(outs, arg);
+            llvm::Value* stackAllocation = this->builder->CreateAlloca(llvm::Type::getInt32Ty(*this->context));
+            this->builder->CreateStore(value, stackAllocation);
+            args.push_back(stackAllocation);
+        }
+
+        return this->builder->CreateCall(function, args);
     }
-    
+
     void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarDeclStmt> varDeclStmt)
     {
-        llvm::Value* value = this->builder->CreateAlloca(llvm::Type::getInt32Ty(*this->context), nullptr, varDeclStmt->identifier);
-        llvm::Value* zero = llvm::ConstantInt::getIntegerValue(llvm::Type::getInt32Ty(*this->context), llvm::APInt(32, 0));
+        llvm::Value *value = this->builder->CreateAlloca(llvm::Type::getInt32Ty(*this->context), nullptr, varDeclStmt->identifier);
+        llvm::Value *zero = llvm::ConstantInt::getIntegerValue(llvm::Type::getInt32Ty(*this->context), llvm::APInt(32, 0));
         this->builder->CreateStore(zero, value);
     }
-    
+
     void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarAssignmentStmt> varAssignmentStmt)
     {
-        llvm::BasicBlock* bb = this->builder->GetInsertBlock();
-        llvm::Value* value = bb->getValueSymbolTable()->lookup(llvm::StringRef(varAssignmentStmt->identifier));
-        llvm::Value* rhs = this->compile(outs, varAssignmentStmt->expr);
+        llvm::BasicBlock *bb = this->builder->GetInsertBlock();
+        llvm::Value *value = bb->getValueSymbolTable()->lookup(llvm::StringRef(varAssignmentStmt->identifier));
+        llvm::Value *rhs = this->compile(outs, varAssignmentStmt->expr);
         this->builder->CreateStore(rhs, value);
     }
-    
-    llvm::Value* Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarExpr> varExpr)
+
+    llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarExpr> varExpr)
     {
-        llvm::BasicBlock* bb = this->builder->GetInsertBlock();
-        llvm::Value* value = bb->getValueSymbolTable()->lookup(llvm::StringRef(varExpr->identifier));
+        llvm::BasicBlock *bb = this->builder->GetInsertBlock();
+        llvm::Value *value = bb->getValueSymbolTable()->lookup(llvm::StringRef(varExpr->identifier));
         return this->builder->CreateLoad(llvm::Type::getInt32Ty(*this->context), value);
     }
 }

@@ -16,6 +16,7 @@ namespace parser
         PRINT,
         VAR_DECL,
         VAR_ASSIGNMENT,
+        FUNCTION_ARG,
         BAD
     };
 
@@ -52,7 +53,7 @@ namespace parser
     {
     public:
         std::string identifier;
-        std::vector<parser::Expr> args;
+        std::vector<std::shared_ptr<parser::Expr>> args;
     };
 
     class VarExpr : public Expr
@@ -61,10 +62,18 @@ namespace parser
         std::string identifier;
     };
 
+    class FunctionArgStmt : public Stmt
+    {
+    public:
+        std::string identifier;
+        parser::Type returnType;
+    };
+
     class FunctionStmt : public Stmt
     {
     public:
         std::string identifier;
+        std::vector<std::shared_ptr<parser::FunctionArgStmt>> args;
         std::vector<std::shared_ptr<Stmt>> stmts;
         parser::Type returnType;
     };
@@ -177,7 +186,7 @@ namespace parser
         std::deque<lexer::Token> tokens;
         parser::Program compiling;
 
-        std::vector<std::string> args();
+        std::vector<std::shared_ptr<parser::FunctionArgStmt>> args();
         std::string identifier();
         parser::Type parseReturnType();
         std::vector<std::shared_ptr<Stmt>> block();

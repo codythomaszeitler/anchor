@@ -153,13 +153,15 @@ namespace parser
         parser::Type returnType = this->parseReturnType();
         std::string identifier = this->identifier();
 
-        this->args();
+        std::vector<std::shared_ptr<parser::FunctionArgStmt>> args = this->args();
 
         parser::FunctionStmt *functionStmt = new parser::FunctionStmt();
         functionStmt->type = parser::StmtType::FUNCTION;
         functionStmt->returnType = returnType;
         functionStmt->stmts = this->block();
         functionStmt->identifier = identifier;
+        functionStmt->args = args;
+
         this->consume(lexer::TokenType::SEMICOLON);
         return std::shared_ptr<Stmt>(functionStmt);
     }
@@ -248,11 +250,26 @@ namespace parser
         }
     }
 
-    std::vector<std::string> Parser::args()
+    std::vector<std::shared_ptr<parser::FunctionArgStmt>> Parser::args()
     {
         this->consume(lexer::TokenType::LEFT_PAREN);
+
+        std::vector<std::shared_ptr<parser::FunctionArgStmt>> args;
+        while (this->peek().getTokenType() != lexer::TokenType::RIGHT_PAREN) 
+        {
+            this->consume(lexer::TokenType::INTEGER_TYPE);
+            std::string identifier = this->identifier();
+
+            std::shared_ptr<parser::FunctionArgStmt> arg = std::make_shared<parser::FunctionArgStmt>();
+            arg->type = parser::StmtType::FUNCTION_ARG;
+            arg->identifier = identifier;
+            arg->returnType = parser::Type::INTEGER;
+
+            args.push_back(arg);
+        }
+
         this->consume(lexer::TokenType::RIGHT_PAREN);
-        return std::vector<std::string>();
+        return args;
     }
 
     std::vector<std::shared_ptr<Stmt>> Parser::block()
@@ -354,6 +371,13 @@ namespace parser
             functionExpr->returnType = parser::Type::INTEGER;
 
             this->consume(lexer::TokenType::LEFT_PAREN);
+
+            while (this->peek().getTokenType() != lexer::TokenType::RIGHT_PAREN) 
+            {
+                std::shared_ptr<parser::Expr> arg = this->expr();
+                functionExpr->args.push_back(arg);
+            }
+
             this->consume(lexer::TokenType::RIGHT_PAREN);
 
             return std::shared_ptr<Expr>(functionExpr);
