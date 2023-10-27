@@ -427,7 +427,6 @@ function integer main() {
 };)";
 
     std::string llvmAnchor = anchor::compile(sourceCode);
-    std::cout << llvmAnchor << std::endl;
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "012");
 }
@@ -454,7 +453,22 @@ function integer main() {
 };)";
 
     std::string llvmAnchor = anchor::compile(sourceCode);
-    std::cout << llvmAnchor << std::endl;
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "3");
+}
+
+TEST(AnchorTest, ItShouldUseIfStmtWithGreaterThan)
+{
+    std::string sourceCode =R"(
+function integer main() {
+    if (5 > 3) 
+    {
+        print ("2");
+    };
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "2");
 }

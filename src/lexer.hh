@@ -36,6 +36,7 @@ namespace lexer
         MINUS_SIGN,
         MULT_SIGN,
         LESS_THAN_SIGN,
+        GREATER_THAN_SIGN,
         EQUALS,
         SEMICOLON,
         FUNCTION,
