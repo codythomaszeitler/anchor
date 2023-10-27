@@ -277,7 +277,27 @@ function integer main() {
 };)";
 
     std::string llvmAnchor = anchor::compile(sourceCode);
-    std::cout << llvmAnchor << std::endl;
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "15");
+}
+
+TEST(AnchorTest, ItShouldBeAbleToUseTwoArgFunctions)
+{
+    std::string sourceCode =R"(
+
+function integer bar(integer a, integer b) {
+    return 5 + a + b;
+};
+
+function integer main() {
+    integer a;
+    a = 5;
+
+    print(a + bar(5, 5));
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "20");
 }

@@ -159,6 +159,11 @@ lexer::Token lexer::Lexer::next()
         return this->parseRawStringLiteral();
     }
 
+    if (peekChar() == ',')
+    {
+        return parseSingleCharacterTokenType(lexer::TokenType::SEMICOLON);
+    }
+
     if (isdigit(peekChar()))
     {
         return this->parseNumber();

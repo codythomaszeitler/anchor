@@ -255,7 +255,7 @@ namespace parser
         this->consume(lexer::TokenType::LEFT_PAREN);
 
         std::vector<std::shared_ptr<parser::FunctionArgStmt>> args;
-        while (this->peek().getTokenType() != lexer::TokenType::RIGHT_PAREN) 
+        while (this->peek().getTokenType() != lexer::TokenType::RIGHT_PAREN)
         {
             this->consume(lexer::TokenType::INTEGER_TYPE);
             std::string identifier = this->identifier();
@@ -266,6 +266,11 @@ namespace parser
             arg->returnType = parser::Type::INTEGER;
 
             args.push_back(arg);
+
+            if (this->peek().getTokenType() == lexer::TokenType::SEMICOLON) 
+            {
+                this->consume(lexer::TokenType::SEMICOLON);
+            }
         }
 
         this->consume(lexer::TokenType::RIGHT_PAREN);
@@ -372,16 +377,23 @@ namespace parser
 
             this->consume(lexer::TokenType::LEFT_PAREN);
 
-            while (this->peek().getTokenType() != lexer::TokenType::RIGHT_PAREN) 
+            while (this->peek().getTokenType() != lexer::TokenType::RIGHT_PAREN)
             {
                 std::shared_ptr<parser::Expr> arg = this->expr();
                 functionExpr->args.push_back(arg);
+
+                if (this->peek().getTokenType() == lexer::TokenType::SEMICOLON)
+                {
+                    this->consume(lexer::TokenType::SEMICOLON);
+                }
             }
 
             this->consume(lexer::TokenType::RIGHT_PAREN);
 
             return std::shared_ptr<Expr>(functionExpr);
-        } else {
+        }
+        else
+        {
             std::shared_ptr<parser::VarExpr> varExpr = std::make_shared<parser::VarExpr>();
             varExpr->identifier = identifier;
             varExpr->returnType = parser::Type::INTEGER;
