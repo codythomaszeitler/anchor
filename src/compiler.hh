@@ -34,6 +34,7 @@ namespace compiler {
         llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::BinaryOperation> integerLiteral);
         llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::FunctionExpr> functionExpr);
         llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarExpr> varExpr);
+        llvm::Value* compile(llvm::raw_ostream &outs, std::shared_ptr<parser::BooleanLiteralExpr> booleanLiteralExpr);
     
         using Body = std::vector<std::shared_ptr<parser::Stmt>>;
         void compile(llvm::raw_ostream &outs, Body functionStmt);

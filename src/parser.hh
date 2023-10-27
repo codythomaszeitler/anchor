@@ -24,7 +24,8 @@ namespace parser
     {
         VOID,
         INTEGER,
-        STRING
+        STRING,
+        BOOLEAN
     };
 
     class Stmt
@@ -39,7 +40,8 @@ namespace parser
         INTEGER_LITERAL,
         STRING_LITERAL,
         VAR,
-        FUNCTION
+        FUNCTION,
+        BOOLEAN
     };
 
     class Expr
@@ -47,6 +49,12 @@ namespace parser
     public:
         parser::ExprType type;
         parser::Type returnType;
+    };
+
+    class BooleanLiteralExpr : public Expr
+    {
+    public:
+        bool value;
     };
 
     class FunctionExpr : public Expr
@@ -201,6 +209,7 @@ namespace parser
         std::shared_ptr<parser::Expr> parseStringLiteral();
         std::shared_ptr<parser::Expr> parseFunctionOrVarExpr();
         std::shared_ptr<parser::Expr> parseInteger();
+        std::shared_ptr<parser::Expr> parseBoolean();
         parser::Operation parseOperation();
 
         lexer::Token peek();

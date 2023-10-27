@@ -96,7 +96,7 @@ namespace compiler
         {
             args.push_back(this->builder->CreateGlobalStringPtr(llvm::StringRef("%s")));
         }
-        else if (stmt->expr->returnType == parser::Type::INTEGER)
+        else if (stmt->expr->returnType == parser::Type::INTEGER || stmt->expr->returnType == parser::Type::BOOLEAN)
         {
             args.push_back(this->builder->CreateGlobalStringPtr(llvm::StringRef("%d")));
         }
@@ -133,6 +133,11 @@ namespace compiler
         else if (expr->type == parser::ExprType::VAR)
         {
             std::shared_ptr<parser::VarExpr> varExpr = std::static_pointer_cast<parser::VarExpr>(expr);
+            return this->compile(outs, varExpr);
+        }
+        else if (expr->type == parser::ExprType::BOOLEAN)
+        {
+            std::shared_ptr<parser::BooleanLiteralExpr> varExpr = std::static_pointer_cast<parser::BooleanLiteralExpr>(expr);
             return this->compile(outs, varExpr);
         }
         else
@@ -216,5 +221,11 @@ namespace compiler
         llvm::BasicBlock *bb = this->builder->GetInsertBlock();
         llvm::Value *value = bb->getValueSymbolTable()->lookup(llvm::StringRef(varExpr->identifier));
         return this->builder->CreateLoad(llvm::Type::getInt32Ty(*this->context), value);
+    }
+
+    llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::BooleanLiteralExpr> booleanLiteralExpr)
+    {
+        llvm::Value* value = llvm::ConstantInt::getBool(llvm::Type::getInt1Ty(*this->context), booleanLiteralExpr->value);
+        return value;
     }
 }

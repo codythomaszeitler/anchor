@@ -301,3 +301,17 @@ function integer main() {
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "20");
 }
+
+TEST(AnchorTest, ItShouldPrintTrueExpression)
+{
+    std::string sourceCode =R"(
+
+function integer main() {
+    print(true);
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "1");
+}
