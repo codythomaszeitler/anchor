@@ -94,7 +94,7 @@ namespace parser
     {
         auto isType = [](lexer::TokenType tokenType)
         {
-            return tokenType == lexer::TokenType::INTEGER_TYPE;
+            return tokenType == lexer::TokenType::INTEGER_TYPE || tokenType == lexer::TokenType::BOOLEAN_TYPE;
         };
 
         lexer::Token maybeReturnOrFunctionDefinition = this->peek();
@@ -202,7 +202,19 @@ namespace parser
         std::shared_ptr<parser::VarDeclStmt> varDeclStmt = std::make_shared<parser::VarDeclStmt>();
         varDeclStmt->identifier = identifier;
         varDeclStmt->type = parser::StmtType::VAR_DECL;
-        varDeclStmt->variableType = parser::Type::INTEGER;
+
+        if (variableType.getTokenType() == lexer::TokenType::INTEGER_TYPE)
+        {
+            varDeclStmt->variableType = parser::Type::INTEGER;
+        }
+        else if (variableType.getTokenType() == lexer::TokenType::BOOLEAN_TYPE)
+        {
+            varDeclStmt->variableType = parser::Type::BOOLEAN;
+        }
+        else
+        {
+            throw parser::InvalidSyntaxException(variableType, std::vector<lexer::TokenType>{lexer::TokenType::INTEGER_TYPE, lexer::TokenType::BOOLEAN_TYPE});
+        }
 
         return varDeclStmt;
     }

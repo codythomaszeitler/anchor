@@ -329,3 +329,35 @@ function integer main() {
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "0");
 }
+
+TEST(AnchorTest, ItShouldDeclAndAssignBooleanToTrue)
+{
+    std::string sourceCode =R"(
+
+function integer main() {
+    boolean a;
+    a = true;
+    print(a);
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "1");
+}
+
+TEST(AnchorTest, ItShouldDeclAndAssignBooleanToFalse)
+{
+    std::string sourceCode =R"(
+
+function integer main() {
+    boolean a;
+    a = false;
+    print(a);
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "0");
+}
