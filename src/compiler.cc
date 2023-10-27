@@ -225,9 +225,18 @@ namespace compiler
 
     void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarDeclStmt> varDeclStmt)
     {
-        llvm::Value *value = this->builder->CreateAlloca(llvm::Type::getInt32Ty(*this->context), nullptr, varDeclStmt->identifier);
-        llvm::Value *zero = llvm::ConstantInt::getIntegerValue(llvm::Type::getInt32Ty(*this->context), llvm::APInt(32, 0));
-        this->builder->CreateStore(zero, value);
+        if (varDeclStmt->variableType == parser::Type::INTEGER)
+        {
+            llvm::Value *value = this->builder->CreateAlloca(llvm::Type::getInt32Ty(*this->context), nullptr, varDeclStmt->identifier);
+            llvm::Value *zero = llvm::ConstantInt::getIntegerValue(llvm::Type::getInt32Ty(*this->context), llvm::APInt(32, 0));
+            this->builder->CreateStore(zero, value);
+        }
+        else if (varDeclStmt->variableType == parser::Type::STRING)
+        {
+            llvm::Value* emptyString = this->builder->CreateGlobalStringPtr(llvm::StringRef(""), "", 0U, this->compiling.get());
+            llvm::Value *value = this->builder->CreateAlloca(llvm::Type::getInt8PtrTy(*this->context), nullptr, varDeclStmt->identifier);
+            this->builder->CreateStore(emptyString, value);
+        }
     }
 
     void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarAssignmentStmt> varAssignmentStmt)
@@ -250,6 +259,10 @@ namespace compiler
         else if (varExpr->returnType == parser::Type::INTEGER)
         {
             return this->builder->CreateLoad(llvm::Type::getInt32Ty(*this->context), value);
+        }
+        else if (varExpr->returnType == parser::Type::STRING) 
+        {
+            return this->builder->CreateLoad(llvm::Type::getInt8PtrTy(*this->context), value);
         }
         else
         {
