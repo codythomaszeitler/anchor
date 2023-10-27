@@ -51,9 +51,15 @@ namespace compiler
             std::shared_ptr<parser::VarAssignmentStmt> varAssignmentStmt = std::static_pointer_cast<parser::VarAssignmentStmt>(stmt);
             this->compile(outs, varAssignmentStmt);
         }
-        else if (stmt->type == parser::StmtType::IF) {
-            std::shared_ptr<parser::IfStmt> ifStmt= std::static_pointer_cast<parser::IfStmt>(stmt);
+        else if (stmt->type == parser::StmtType::IF)
+        {
+            std::shared_ptr<parser::IfStmt> ifStmt = std::static_pointer_cast<parser::IfStmt>(stmt);
             this->compile(outs, ifStmt);
+        }
+        else if (stmt->type == parser::StmtType::WHILE)
+        {
+            std::shared_ptr<parser::WhileStmt> whileStmt = std::static_pointer_cast<parser::WhileStmt>(stmt);
+            this->compile(outs, whileStmt);
         }
     }
 
@@ -255,12 +261,33 @@ namespace compiler
         llvm::BasicBlock *then = llvm::BasicBlock::Create(*this->context, "then", prev->getParent());
         llvm::BasicBlock *end = llvm::BasicBlock::Create(*this->context, "end", prev->getParent());
 
-        llvm::Value* condition = this->compile(outs, ifStmt->condition);
+        llvm::Value *condition = this->compile(outs, ifStmt->condition);
         this->builder->CreateCondBr(condition, then, end);
 
         this->builder->SetInsertPoint(then);
         this->compile(outs, ifStmt->stmts);
         this->builder->CreateBr(end);
+
+        this->builder->SetInsertPoint(end);
+    }
+
+    void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::WhileStmt> whileStmt)
+    {
+        llvm::BasicBlock *prev = this->builder->GetInsertBlock();
+
+        llvm::BasicBlock *whileLoopStart = llvm::BasicBlock::Create(*this->context, "whileLoopStart", prev->getParent());
+        llvm::BasicBlock *body = llvm::BasicBlock::Create(*this->context, "body", prev->getParent());
+        llvm::BasicBlock *end = llvm::BasicBlock::Create(*this->context, "end", prev->getParent());
+
+        this->builder->CreateBr(whileLoopStart);
+
+        this->builder->SetInsertPoint(whileLoopStart);
+        llvm::Value *condition = this->compile(outs, whileStmt->condition);
+        this->builder->CreateCondBr(condition, body, end);
+
+        this->builder->SetInsertPoint(body);
+        this->compile(outs, whileStmt->stmts);
+        this->builder->CreateBr(whileLoopStart);
 
         this->builder->SetInsertPoint(end);
     }

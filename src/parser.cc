@@ -113,6 +113,10 @@ namespace parser
             {
                 return this->ifStmt();
             }
+            else if (maybeReturnOrFunctionDefinition.getTokenType() == lexer::TokenType::WHILE)
+            {
+                return this->whileStmt();
+            }
             else if (isType(maybeReturnOrFunctionDefinition.getTokenType()))
             {
                 return this->varDeclStmt();
@@ -184,7 +188,7 @@ namespace parser
 
         return printStmt;
     }
-    
+
     std::shared_ptr<Stmt> Parser::ifStmt()
     {
         std::shared_ptr<parser::IfStmt> ifStmt = std::make_shared<parser::IfStmt>();
@@ -198,7 +202,24 @@ namespace parser
         this->consume(lexer::TokenType::SEMICOLON);
 
         ifStmt->type = parser::StmtType::IF;
-        return std::static_pointer_cast<parser::IfStmt>(ifStmt);
+        return std::static_pointer_cast<parser::Stmt>(ifStmt);
+    }
+    
+    std::shared_ptr<Stmt> Parser::whileStmt()
+    {
+        std::shared_ptr<parser::WhileStmt> whileStmt = std::make_shared<parser::WhileStmt>();
+        whileStmt->type = parser::StmtType::WHILE;
+
+        this->consume(lexer::TokenType::WHILE);
+
+        this->consume(lexer::TokenType::LEFT_PAREN);
+        whileStmt->condition = this->expr();
+        this->consume(lexer::TokenType::RIGHT_PAREN);
+
+        whileStmt->stmts = this->block();
+        this->consume(lexer::TokenType::SEMICOLON);
+
+        return std::static_pointer_cast<parser::Stmt>(whileStmt);
     }
 
     std::shared_ptr<Stmt> Parser::returnStmt()
@@ -357,7 +378,7 @@ namespace parser
                    tokenType == lexer::TokenType::MULT_SIGN;
         };
 
-        auto isBooleanBinaryOp = [](lexer::TokenType tokenType) 
+        auto isBooleanBinaryOp = [](lexer::TokenType tokenType)
         {
             return tokenType == lexer::TokenType::LESS_THAN_SIGN;
         };
