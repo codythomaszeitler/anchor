@@ -267,7 +267,7 @@ namespace parser
 
             args.push_back(arg);
 
-            if (this->peek().getTokenType() == lexer::TokenType::SEMICOLON) 
+            if (this->peek().getTokenType() == lexer::TokenType::SEMICOLON)
             {
                 this->consume(lexer::TokenType::SEMICOLON);
             }
@@ -339,6 +339,11 @@ namespace parser
         else if (peeked.getTokenType() == lexer::TokenType::INTEGER)
         {
             lhs = this->parseInteger();
+        }
+        else if (peeked.getTokenType() == lexer::TokenType::TRUE ||
+                 peeked.getTokenType() == lexer::TokenType::FALSE)
+        {
+            lhs = this->parseBoolean();
         }
 
         if (isBinaryOp(this->peek().getTokenType()))
@@ -412,6 +417,30 @@ namespace parser
         integerLiteral->type = parser::ExprType::INTEGER_LITERAL;
         integerLiteral->returnType = parser::Type::INTEGER;
         return std::shared_ptr<parser::Expr>(integerLiteral);
+    }
+
+    std::shared_ptr<parser::Expr> Parser::parseBoolean()
+    {
+        lexer::Token booleanPrimitive = this->pop();
+
+        std::shared_ptr<parser::BooleanLiteralExpr> booleanLiteralExpr = std::make_shared<parser::BooleanLiteralExpr>();
+        booleanLiteralExpr->type = parser::ExprType::BOOLEAN;
+        booleanLiteralExpr->returnType = parser::Type::BOOLEAN;
+
+        if (booleanPrimitive.getTokenType() == lexer::TokenType::TRUE)
+        {
+            booleanLiteralExpr->value = true;
+            return std::static_pointer_cast<parser::Expr>(booleanLiteralExpr);
+        }
+        else if (booleanPrimitive.getTokenType() == lexer::TokenType::FALSE)
+        {
+            booleanLiteralExpr->value = false;
+            return std::static_pointer_cast<parser::Expr>(booleanLiteralExpr);
+        }
+        else
+        {
+            throw parser::InvalidSyntaxException(booleanPrimitive, std::vector<lexer::TokenType>{lexer::TokenType::TRUE, lexer::TokenType::FALSE});
+        }
     }
 
     parser::Operation Parser::parseOperation()

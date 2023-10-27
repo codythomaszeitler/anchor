@@ -303,6 +303,14 @@ lexer::Token lexer::Lexer::parseKeywordOrIdentifier()
     {
         return lexer::Token(lexer::TokenType::VOID_TYPE, raw, start, end);
     }
+    else if ("true" == raw)
+    {
+        return lexer::Token(lexer::TokenType::TRUE, raw, start, end);
+    }
+    else if ("false" == raw)
+    {
+        return lexer::Token(lexer::TokenType::FALSE, raw, start, end);
+    }
     else
     {
         return lexer::Token(lexer::TokenType::IDENTIFIER, raw, start, end);
