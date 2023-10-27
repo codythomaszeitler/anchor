@@ -17,6 +17,7 @@ namespace parser
         VAR_DECL,
         VAR_ASSIGNMENT,
         FUNCTION_ARG,
+        IF,
         BAD
     };
 
@@ -84,6 +85,13 @@ namespace parser
         std::vector<std::shared_ptr<parser::FunctionArgStmt>> args;
         std::vector<std::shared_ptr<Stmt>> stmts;
         parser::Type returnType;
+    };
+
+    class IfStmt : public Stmt
+    {
+    public:
+        std::shared_ptr<parser::Expr> condition;
+        std::vector<std::shared_ptr<Stmt>> stmts;
     };
 
     class VarDeclStmt : public Stmt
@@ -202,11 +210,12 @@ namespace parser
         std::shared_ptr<Stmt> stmt();
         std::shared_ptr<Stmt> functionStmt();
         std::shared_ptr<Stmt> printStmt();
+        std::shared_ptr<Stmt> ifStmt();
         std::shared_ptr<Stmt> returnStmt();
         std::shared_ptr<Stmt> varDeclStmt();
         std::shared_ptr<Stmt> varAssignmentStmt();
-        std::shared_ptr<parser::Expr> expr();
 
+        std::shared_ptr<parser::Expr> expr();
         std::shared_ptr<parser::Expr> parseStringLiteral();
         std::shared_ptr<parser::Expr> parseFunctionOrVarExpr();
         std::shared_ptr<parser::Expr> parseInteger();

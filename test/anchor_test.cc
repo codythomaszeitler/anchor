@@ -375,3 +375,37 @@ function integer main() {
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "1");
 }
+
+TEST(AnchorTest, ItShouldTakeIfBranchIfConditionSuccessful)
+{
+    std::string sourceCode =R"(
+
+function integer main() {
+    if (3 < 5) 
+    {
+        print ("2");
+    };
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "2");
+}
+
+TEST(AnchorTest, ItShouldTakeIfBranchIfConditionNotSuccessful)
+{
+    std::string sourceCode =R"(
+
+function integer main() {
+    if (5 < 3) 
+    {
+        print ("2");
+    };
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "");
+}

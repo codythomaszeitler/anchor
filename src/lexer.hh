@@ -48,7 +48,8 @@ namespace lexer
         STRING,
         END_OF_STREAM,
         TRUE,
-        FALSE
+        FALSE,
+        IF
     };
 
     std::string tostring(lexer::TokenType tokenType);

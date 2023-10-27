@@ -51,6 +51,10 @@ namespace compiler
             std::shared_ptr<parser::VarAssignmentStmt> varAssignmentStmt = std::static_pointer_cast<parser::VarAssignmentStmt>(stmt);
             this->compile(outs, varAssignmentStmt);
         }
+        else if (stmt->type == parser::StmtType::IF) {
+            std::shared_ptr<parser::IfStmt> ifStmt= std::static_pointer_cast<parser::IfStmt>(stmt);
+            this->compile(outs, ifStmt);
+        }
     }
 
     void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::FunctionStmt> functionStmt)
@@ -64,7 +68,7 @@ namespace compiler
         llvm::FunctionType *functionReturnType = llvm::FunctionType::get(llvm::Type::getInt32Ty(*this->context), args, true);
         llvm::Function *function = llvm::Function::Create(functionReturnType, llvm::Function::ExternalLinkage, functionStmt->identifier, this->compiling.get());
 
-        for (int i = 0; i < functionStmt->args.size(); i++) 
+        for (int i = 0; i < functionStmt->args.size(); i++)
         {
             const auto astArg = functionStmt->args[i];
             const auto llvmArg = function->getArg(i);
@@ -94,7 +98,7 @@ namespace compiler
         std::vector<llvm::Value *> args;
         if (stmt->expr->returnType == parser::Type::STRING)
         {
-            args.push_back(this->builder->CreateGlobalStringPtr(llvm::StringRef("%s")));
+            args.push_back(this->builder->CreateGlobalStringPtr(llvm::StringRef("%s"), "", 0U, this->compiling.get()));
         }
         else if (stmt->expr->returnType == parser::Type::INTEGER || stmt->expr->returnType == parser::Type::BOOLEAN)
         {
@@ -148,7 +152,7 @@ namespace compiler
 
     llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::StringLiteral> stringLiteral)
     {
-        return this->builder->CreateGlobalStringPtr(llvm::StringRef(stringLiteral->literal));
+        return this->builder->CreateGlobalStringPtr(llvm::StringRef(stringLiteral->literal), "", 0U, this->compiling.get());
     }
 
     void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::ReturnStmt> returnStmt)
@@ -197,7 +201,7 @@ namespace compiler
         for (const auto &arg : functionExpr->args)
         {
             llvm::Value *value = this->compile(outs, arg);
-            llvm::Value* stackAllocation = this->builder->CreateAlloca(llvm::Type::getInt32Ty(*this->context));
+            llvm::Value *stackAllocation = this->builder->CreateAlloca(llvm::Type::getInt32Ty(*this->context));
             this->builder->CreateStore(value, stackAllocation);
             args.push_back(stackAllocation);
         }
@@ -225,14 +229,15 @@ namespace compiler
         llvm::BasicBlock *bb = this->builder->GetInsertBlock();
         llvm::Value *value = bb->getValueSymbolTable()->lookup(llvm::StringRef(varExpr->identifier));
 
-        if (varExpr->returnType == parser::Type::BOOLEAN) {
+        if (varExpr->returnType == parser::Type::BOOLEAN)
+        {
             return this->builder->CreateLoad(llvm::Type::getInt1Ty(*this->context), value);
-        } 
-        else if (varExpr->returnType == parser::Type::INTEGER) 
+        }
+        else if (varExpr->returnType == parser::Type::INTEGER)
         {
             return this->builder->CreateLoad(llvm::Type::getInt32Ty(*this->context), value);
         }
-        else 
+        else
         {
             throw std::invalid_argument("Cannot compile variable expression with unknown type.");
         }
@@ -240,7 +245,23 @@ namespace compiler
 
     llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::BooleanLiteralExpr> booleanLiteralExpr)
     {
-        llvm::Value* value = llvm::ConstantInt::getBool(llvm::Type::getInt1Ty(*this->context), booleanLiteralExpr->value);
+        llvm::Value *value = llvm::ConstantInt::getBool(llvm::Type::getInt1Ty(*this->context), booleanLiteralExpr->value);
         return value;
+    }
+
+    void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::IfStmt> ifStmt)
+    {
+        llvm::BasicBlock *prev = this->builder->GetInsertBlock();
+        llvm::BasicBlock *then = llvm::BasicBlock::Create(*this->context, "then", prev->getParent());
+        llvm::BasicBlock *end = llvm::BasicBlock::Create(*this->context, "end", prev->getParent());
+
+        llvm::Value* condition = this->compile(outs, ifStmt->condition);
+        this->builder->CreateCondBr(condition, then, end);
+
+        this->builder->SetInsertPoint(then);
+        this->compile(outs, ifStmt->stmts);
+        this->builder->CreateBr(end);
+
+        this->builder->SetInsertPoint(end);
     }
 }

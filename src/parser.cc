@@ -109,6 +109,10 @@ namespace parser
             {
                 return this->printStmt();
             }
+            else if (maybeReturnOrFunctionDefinition.getTokenType() == lexer::TokenType::IF)
+            {
+                return this->ifStmt();
+            }
             else if (isType(maybeReturnOrFunctionDefinition.getTokenType()))
             {
                 return this->varDeclStmt();
@@ -179,6 +183,22 @@ namespace parser
         this->consume(lexer::TokenType::SEMICOLON);
 
         return printStmt;
+    }
+    
+    std::shared_ptr<Stmt> Parser::ifStmt()
+    {
+        std::shared_ptr<parser::IfStmt> ifStmt = std::make_shared<parser::IfStmt>();
+        this->consume(lexer::TokenType::IF);
+
+        this->consume(lexer::TokenType::LEFT_PAREN);
+        ifStmt->condition = this->expr();
+        this->consume(lexer::TokenType::RIGHT_PAREN);
+
+        ifStmt->stmts = this->block();
+        this->consume(lexer::TokenType::SEMICOLON);
+
+        ifStmt->type = parser::StmtType::IF;
+        return std::static_pointer_cast<parser::IfStmt>(ifStmt);
     }
 
     std::shared_ptr<Stmt> Parser::returnStmt()
