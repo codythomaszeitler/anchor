@@ -531,3 +531,20 @@ function integer main() {
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "Hello, World!20");
 }
+
+TEST(AnchorTest, ItShouldSeePrintStatementFromVoidFunction)
+{
+    std::string sourceCode =R"(
+function void bar() {
+    print("Hello, World!");
+};
+
+function integer main() {
+    bar(); 
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "Hello, World!");
+}

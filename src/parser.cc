@@ -318,6 +318,10 @@ namespace parser
         {
             return parser::Type::STRING;
         }
+        else if (variableType.getTokenType() == lexer::TokenType::VOID_TYPE)
+        {
+            return parser::Type::VOID;
+        }
         else
         {
             throw parser::InvalidSyntaxException(variableType, std::vector<lexer::TokenType>{lexer::TokenType::INTEGER_TYPE, lexer::TokenType::BOOLEAN_TYPE});
@@ -326,19 +330,7 @@ namespace parser
 
     parser::Type Parser::parseReturnType()
     {
-        lexer::Token token = this->pop();
-        if (token.getTokenType() == lexer::TokenType::VOID_TYPE)
-        {
-            return parser::Type::VOID;
-        }
-        else if (token.getTokenType() == lexer::TokenType::INTEGER_TYPE)
-        {
-            return parser::Type::INTEGER;
-        }
-        else
-        {
-            throw parser::InvalidSyntaxException(token, std::vector<lexer::TokenType>{lexer::TokenType::VOID_TYPE, lexer::TokenType::INTEGER_TYPE});
-        }
+        return this->type(); 
     }
 
     std::vector<std::shared_ptr<parser::FunctionArgStmt>> Parser::args()
