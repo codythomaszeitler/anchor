@@ -88,6 +88,12 @@ namespace compiler
 
         this->compile(outs, functionStmt->stmts);
 
+        if (functionStmt->returnType == parser::Type::VOID) 
+        {
+            llvm::Value *zero = llvm::ConstantInt::getIntegerValue(llvm::Type::getInt32Ty(*this->context), llvm::APInt(32, 0));
+            this->builder->CreateRet(zero);
+        }
+
         this->builder->SetInsertPoint(prev);
     }
 
