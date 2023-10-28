@@ -73,6 +73,30 @@ namespace parser
     {
         return this->errors.empty();
     }
+    
+    Context::Context()
+    {
+        this->parent = nullptr;
+    }
+    
+    void Context::setType(std::string identifier, parser::Type type)
+    {
+        this->varIdToVarType[identifier] = type;
+    }
+    
+    parser::Type Context::getType(std::string identifier)
+    {
+        Context* iterator = this;
+        while (iterator != nullptr) 
+        {
+            if (iterator->varIdToVarType.contains(identifier))
+            {
+                return iterator->varIdToVarType[identifier];
+            }
+            iterator = iterator->parent;
+        }
+        return parser::Type::NOT_FOUND;
+    }
 
     Parser::Parser(std::deque<lexer::Token> tokens) : tokens(tokens)
     {
@@ -127,7 +151,7 @@ namespace parser
             }
             else
             {
-                return this->varAssignmentStmt();
+                return this->varAssignmentStmtOrExpr();
             }
         }
         catch (parser::InvalidSyntaxException &ise)
@@ -210,7 +234,7 @@ namespace parser
         ifStmt->type = parser::StmtType::IF;
         return std::static_pointer_cast<parser::Stmt>(ifStmt);
     }
-    
+
     std::shared_ptr<Stmt> Parser::whileStmt()
     {
         std::shared_ptr<parser::WhileStmt> whileStmt = std::make_shared<parser::WhileStmt>();
@@ -241,7 +265,7 @@ namespace parser
 
     std::shared_ptr<Stmt> Parser::varDeclStmt()
     {
-        lexer::Token variableType = this->pop();
+        parser::Type type = this->type();
         std::string identifier = this->identifier();
 
         this->consume(lexer::TokenType::SEMICOLON);
@@ -249,43 +273,24 @@ namespace parser
         std::shared_ptr<parser::VarDeclStmt> varDeclStmt = std::make_shared<parser::VarDeclStmt>();
         varDeclStmt->identifier = identifier;
         varDeclStmt->type = parser::StmtType::VAR_DECL;
+        varDeclStmt->variableType = type;
 
-        if (variableType.getTokenType() == lexer::TokenType::INTEGER_TYPE)
-        {
-            varDeclStmt->variableType = parser::Type::INTEGER;
-        }
-        else if (variableType.getTokenType() == lexer::TokenType::BOOLEAN_TYPE)
-        {
-            varDeclStmt->variableType = parser::Type::BOOLEAN;
-        }
-        else if (variableType.getTokenType() == lexer::TokenType::STRING_TYPE)
-        {
-            varDeclStmt->variableType = parser::Type::STRING;
-        }
-        else
-        {
-            throw parser::InvalidSyntaxException(variableType, std::vector<lexer::TokenType>{lexer::TokenType::INTEGER_TYPE, lexer::TokenType::BOOLEAN_TYPE});
-        }
-
-        this->context.varIdToVarType[varDeclStmt->identifier] = varDeclStmt->variableType;
+        this->context.setType(varDeclStmt->identifier, varDeclStmt->variableType);
 
         return varDeclStmt;
     }
 
-    std::shared_ptr<Stmt> Parser::varAssignmentStmt()
+    std::shared_ptr<Stmt> Parser::varAssignmentStmtOrExpr()
     {
-        std::string identifier = this->identifier();
+        std::shared_ptr<parser::Expr> expr = this->expr();
 
-        this->consume(lexer::TokenType::EQUALS);
-
-        std::shared_ptr<parser::VarAssignmentStmt> varAssignmentStmt = std::make_shared<parser::VarAssignmentStmt>();
-        varAssignmentStmt->identifier = identifier;
-        varAssignmentStmt->type = parser::StmtType::VAR_ASSIGNMENT;
-        varAssignmentStmt->expr = this->expr();
+        std::shared_ptr<parser::ExprStmt> exprStmt = std::make_unique<parser::ExprStmt>();
+        exprStmt->type = parser::StmtType::EXPR;
+        exprStmt->expr = expr;
 
         this->consume(lexer::TokenType::SEMICOLON);
 
-        return varAssignmentStmt;
+        return exprStmt;
     }
 
     std::string Parser::identifier()
@@ -296,6 +301,27 @@ namespace parser
             throw parser::InvalidSyntaxException(token, std::vector<lexer::TokenType>{lexer::TokenType::IDENTIFIER});
         }
         return token.getRaw();
+    }
+    
+    parser::Type Parser::type()
+    {
+        lexer::Token variableType = this->pop();
+        if (variableType.getTokenType() == lexer::TokenType::INTEGER_TYPE)
+        {
+            return parser::Type::INTEGER;
+        }
+        else if (variableType.getTokenType() == lexer::TokenType::BOOLEAN_TYPE)
+        {
+            return parser::Type::BOOLEAN;
+        }
+        else if (variableType.getTokenType() == lexer::TokenType::STRING_TYPE)
+        {
+            return parser::Type::STRING;
+        }
+        else
+        {
+            throw parser::InvalidSyntaxException(variableType, std::vector<lexer::TokenType>{lexer::TokenType::INTEGER_TYPE, lexer::TokenType::BOOLEAN_TYPE});
+        }
     }
 
     parser::Type Parser::parseReturnType()
@@ -322,15 +348,15 @@ namespace parser
         std::vector<std::shared_ptr<parser::FunctionArgStmt>> args;
         while (this->peek().getTokenType() != lexer::TokenType::RIGHT_PAREN)
         {
-            this->consume(lexer::TokenType::INTEGER_TYPE);
+            parser::Type type = this->type();
             std::string identifier = this->identifier();
 
             std::shared_ptr<parser::FunctionArgStmt> arg = std::make_shared<parser::FunctionArgStmt>();
             arg->type = parser::StmtType::FUNCTION_ARG;
             arg->identifier = identifier;
-            arg->returnType = parser::Type::INTEGER;
+            arg->returnType = type;
 
-            this->context.varIdToVarType[arg->identifier] = arg->returnType;
+            this->context.setType(arg->identifier, arg->returnType);
 
             args.push_back(arg);
 
@@ -400,9 +426,7 @@ namespace parser
 
         auto isBooleanBinaryOp = [](lexer::TokenType tokenType)
         {
-            return tokenType == lexer::TokenType::LESS_THAN_SIGN
-                || tokenType == lexer::TokenType::GREATER_THAN_SIGN
-                || tokenType == lexer::TokenType::DOUBLE_EQUALS;
+            return tokenType == lexer::TokenType::LESS_THAN_SIGN || tokenType == lexer::TokenType::GREATER_THAN_SIGN || tokenType == lexer::TokenType::DOUBLE_EQUALS;
         };
 
         lexer::Token peeked = this->peek();
@@ -488,11 +512,23 @@ namespace parser
 
             return std::shared_ptr<Expr>(functionExpr);
         }
+        else if (this->peek().getTokenType() == lexer::TokenType::EQUALS)
+        {
+            this->consume(lexer::TokenType::EQUALS);
+
+            std::shared_ptr<parser::VarAssignmentExpr> varAssignmentExpr = std::make_shared<parser::VarAssignmentExpr>();
+            varAssignmentExpr->type = parser::ExprType::ASSIGNMENT;
+            varAssignmentExpr->returnType = this->context.getType(identifier);
+            varAssignmentExpr->expr = this->expr();
+            varAssignmentExpr->identifier = identifier;
+
+            return std::static_pointer_cast<parser::Expr>(varAssignmentExpr);
+        }
         else
         {
             std::shared_ptr<parser::VarExpr> varExpr = std::make_shared<parser::VarExpr>();
             varExpr->identifier = identifier;
-            varExpr->returnType = this->context.varIdToVarType[varExpr->identifier];
+            varExpr->returnType = this->context.getType(identifier);
             varExpr->type = parser::ExprType::VAR;
             return std::static_pointer_cast<parser::Expr>(varExpr);
         }
@@ -554,11 +590,15 @@ namespace parser
         {
             return parser::Operation::LESS_THAN;
         }
-        else if (operation.getTokenType() == lexer::TokenType::GREATER_THAN_SIGN) 
+        else if (operation.getTokenType() == lexer::TokenType::GREATER_THAN_SIGN)
         {
             return parser::Operation::GREATER_THAN;
         }
-        else if (operation.getTokenType() == lexer::TokenType::DOUBLE_EQUALS) 
+        else if (operation.getTokenType() == lexer::TokenType::EQUALS)
+        {
+            return parser::Operation::ASSIGNMENT;
+        }
+        else if (operation.getTokenType() == lexer::TokenType::DOUBLE_EQUALS)
         {
             return parser::Operation::EQUALS;
         }

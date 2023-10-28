@@ -46,10 +46,10 @@ namespace compiler
             std::shared_ptr<parser::VarDeclStmt> varDeclStmt = std::static_pointer_cast<parser::VarDeclStmt>(stmt);
             this->compile(outs, varDeclStmt);
         }
-        else if (stmt->type == parser::StmtType::VAR_ASSIGNMENT)
+        else if (stmt->type == parser::StmtType::EXPR)
         {
-            std::shared_ptr<parser::VarAssignmentStmt> varAssignmentStmt = std::static_pointer_cast<parser::VarAssignmentStmt>(stmt);
-            this->compile(outs, varAssignmentStmt);
+            std::shared_ptr<parser::ExprStmt> exprStmt = std::static_pointer_cast<parser::ExprStmt>(stmt);
+            this->compile(outs, exprStmt);
         }
         else if (stmt->type == parser::StmtType::IF)
         {
@@ -150,6 +150,11 @@ namespace compiler
             std::shared_ptr<parser::BooleanLiteralExpr> varExpr = std::static_pointer_cast<parser::BooleanLiteralExpr>(expr);
             return this->compile(outs, varExpr);
         }
+        else if (expr->type == parser::ExprType::ASSIGNMENT)
+        {
+            std::shared_ptr<parser::VarAssignmentExpr> varExpr = std::static_pointer_cast<parser::VarAssignmentExpr>(expr);
+            return this->compile(outs, varExpr);
+        }
         else
         {
             throw std::invalid_argument("Unsupported expression type.");
@@ -233,18 +238,21 @@ namespace compiler
         }
         else if (varDeclStmt->variableType == parser::Type::STRING)
         {
-            llvm::Value* emptyString = this->builder->CreateGlobalStringPtr(llvm::StringRef(""), "", 0U, this->compiling.get());
+            llvm::Value *emptyString = this->builder->CreateGlobalStringPtr(llvm::StringRef(""), "", 0U, this->compiling.get());
             llvm::Value *value = this->builder->CreateAlloca(llvm::Type::getInt8PtrTy(*this->context), nullptr, varDeclStmt->identifier);
             this->builder->CreateStore(emptyString, value);
         }
+        else if (varDeclStmt->variableType == parser::Type::BOOLEAN)
+        {
+            llvm::Value *value = this->builder->CreateAlloca(llvm::Type::getInt1Ty(*this->context), nullptr, varDeclStmt->identifier);
+            llvm::Value *zero = llvm::ConstantInt::getBool(llvm::Type::getInt1Ty(*this->context), false);
+            this->builder->CreateStore(zero, value);
+        }
     }
 
-    void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarAssignmentStmt> varAssignmentStmt)
+    void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::ExprStmt> exprStmt)
     {
-        llvm::BasicBlock *bb = this->builder->GetInsertBlock();
-        llvm::Value *value = bb->getValueSymbolTable()->lookup(llvm::StringRef(varAssignmentStmt->identifier));
-        llvm::Value *rhs = this->compile(outs, varAssignmentStmt->expr);
-        this->builder->CreateStore(rhs, value);
+        this->compile(outs, exprStmt->expr);
     }
 
     llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarExpr> varExpr)
@@ -260,9 +268,13 @@ namespace compiler
         {
             return this->builder->CreateLoad(llvm::Type::getInt32Ty(*this->context), value);
         }
-        else if (varExpr->returnType == parser::Type::STRING) 
+        else if (varExpr->returnType == parser::Type::STRING)
         {
             return this->builder->CreateLoad(llvm::Type::getInt8PtrTy(*this->context), value);
+        }
+        else if (varExpr->returnType == parser::Type::VOID)
+        {
+            return this->builder->CreateLoad(llvm::Type::getVoidTy(*this->context), value);
         }
         else
         {
@@ -311,5 +323,13 @@ namespace compiler
         this->builder->CreateBr(whileLoopStart);
 
         this->builder->SetInsertPoint(end);
+    }
+
+    llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarAssignmentExpr> varAssignmentExpr)
+    {
+        llvm::BasicBlock *bb = this->builder->GetInsertBlock();
+        llvm::Value *value = bb->getValueSymbolTable()->lookup(llvm::StringRef(varAssignmentExpr->identifier));
+        llvm::Value *rhs = this->compile(outs, varAssignmentExpr->expr);
+        return this->builder->CreateStore(rhs, value);
     }
 }
