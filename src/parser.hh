@@ -15,7 +15,7 @@ namespace parser
         RETURN,
         PRINT,
         VAR_DECL,
-        VAR_ASSIGNMENT,
+        EXPR,
         FUNCTION_ARG,
         IF,
         WHILE,
@@ -27,7 +27,8 @@ namespace parser
         VOID,
         INTEGER,
         STRING,
-        BOOLEAN
+        BOOLEAN,
+        NOT_FOUND
     };
 
     class Stmt
@@ -43,7 +44,8 @@ namespace parser
         STRING_LITERAL,
         VAR,
         FUNCTION,
-        BOOLEAN
+        BOOLEAN,
+        ASSIGNMENT
     };
 
     class Expr
@@ -109,10 +111,16 @@ namespace parser
         parser::Type variableType;
     };
 
-    class VarAssignmentStmt : public Stmt
+    class VarAssignmentExpr : public Expr
     {
     public:
         std::string identifier;
+        std::shared_ptr<parser::Expr> expr;
+    };
+
+    class ExprStmt : public Stmt
+    {
+    public:
         std::shared_ptr<parser::Expr> expr;
     };
 
@@ -158,7 +166,8 @@ namespace parser
         MULTIPLICATION,
         LESS_THAN,
         GREATER_THAN,
-        EQUALS
+        EQUALS,
+        ASSIGNMENT 
     };
 
     class BinaryOperation : public Expr
@@ -208,9 +217,15 @@ namespace parser
     };
 
     class Context {
-    public:
-        parser::Context* parent;
+    private:
         std::map<std::string, parser::Type> varIdToVarType;
+    public:
+        Context();
+
+        parser::Context* parent;
+
+        void setType(std::string, parser::Type);
+        parser::Type getType(std::string);
     };
 
     class Parser
@@ -223,6 +238,7 @@ namespace parser
 
         std::vector<std::shared_ptr<parser::FunctionArgStmt>> args();
         std::string identifier();
+        parser::Type type();
         parser::Type parseReturnType();
         std::vector<std::shared_ptr<Stmt>> block();
         std::shared_ptr<Stmt> stmt();
@@ -232,7 +248,7 @@ namespace parser
         std::shared_ptr<Stmt> whileStmt();
         std::shared_ptr<Stmt> returnStmt();
         std::shared_ptr<Stmt> varDeclStmt();
-        std::shared_ptr<Stmt> varAssignmentStmt();
+        std::shared_ptr<Stmt> varAssignmentStmtOrExpr();
 
         std::shared_ptr<parser::Expr> expr();
         std::shared_ptr<parser::Expr> parseStringLiteral();

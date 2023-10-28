@@ -342,6 +342,7 @@ function integer main() {
 };)";
 
     std::string llvmAnchor = anchor::compile(sourceCode);
+    std::cout << llvmAnchor << std::endl;
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "1");
 }
