@@ -12,6 +12,11 @@ namespace compiler
         this->declarePrintFunction();
         this->declareMallocFunction();
         this->declareFreeFunction();
+        this->declareMemCpyFunction();
+
+        llvm::Type *characterBufferPointer = llvm::Type::getInt8PtrTy(*this->context);
+        llvm::Type *numCharsCurrentlyInBuffer = llvm::Type::getInt32Ty(*this->context);
+        this->anchorStringStructType = llvm::StructType::create(std::vector<llvm::Type *>{characterBufferPointer, numCharsCurrentlyInBuffer});
     }
 
     void Compiler::declarePrintFunction()
@@ -30,6 +35,40 @@ namespace compiler
     {
         llvm::FunctionType *functionReturnType = llvm::FunctionType::get(llvm::Type::getVoidTy(*this->context), true);
         llvm::Function::Create(functionReturnType, llvm::Function::ExternalLinkage, "free", this->compiling.get());
+    }
+
+    void Compiler::declareMemCpyFunction()
+    {
+        llvm::FunctionType *functionReturnType = llvm::FunctionType::get(llvm::Type::getVoidTy(*this->context), true);
+        llvm::Function::Create(functionReturnType, llvm::Function::ExternalLinkage, "memcpy", this->compiling.get());
+    }
+
+    llvm::Value *Compiler::get32BitInteger(int value)
+    {
+        return llvm::ConstantInt::getIntegerValue(llvm::Type::getInt32Ty(*this->context), llvm::APInt(32, value));
+    }
+
+    llvm::Value *Compiler::getAnchorString(std::string literal)
+    {
+        llvm::Value *source = this->builder->CreateGlobalStringPtr(llvm::StringRef(literal), "", 0U, this->compiling.get());
+
+        llvm::StructType *structType = this->anchorStringStructType;
+        llvm::Value *anchorString = this->builder->CreateAlloca(structType);
+
+        llvm::Value *size = this->get32BitInteger(literal.length() + 1);
+
+        llvm::Function *malloc = this->compiling->getFunction("malloc");
+        llvm::Value *allocated = this->builder->CreateCall(malloc, std::vector<llvm::Value *>{size});
+
+        llvm::Value *stringBuffer = this->builder->CreateStructGEP(structType, anchorString, 0);
+
+        llvm::Function *memcpy = this->compiling->getFunction("memcpy");
+        this->builder->CreateCall(memcpy, std::vector<llvm::Value *>{allocated, source, size});
+        this->builder->CreateStore(allocated, stringBuffer);
+
+        llvm::Value *sizePointer = this->builder->CreateStructGEP(structType, anchorString, 1);
+        this->builder->CreateStore(size, sizePointer);
+        return anchorString;
     }
 
     void Compiler::compile(llvm::raw_ostream &outs, parser::Program program)
@@ -132,10 +171,25 @@ namespace compiler
         }
 
         llvm::Value *expr = this->compile(outs, stmt->expr);
-        args.push_back(expr);
 
-        llvm::Function *printf = this->compiling->getFunction("printf");
-        this->builder->CreateCall(printf, args);
+        if (stmt->expr->returnType == parser::Type::STRING)
+        {
+            llvm::Value *stringLiteralPointer = this->builder->CreateStructGEP(this->anchorStringStructType, expr, 0);
+            llvm::Value *stringLiteral = this->builder->CreateLoad(llvm::Type::getInt8PtrTy(*this->context), stringLiteralPointer);
+
+            args.push_back(stringLiteral);
+            llvm::Function *printf = this->compiling->getFunction("printf");
+            this->builder->CreateCall(printf, args);
+        }
+        else
+        {
+            args.push_back(expr);
+            llvm::Function *printf = this->compiling->getFunction("printf");
+            this->builder->CreateCall(printf, args);
+        }
+
+        // Now this is where it gets interesting...
+        // If the expr is of type parser::Type::STRING
     }
 
     llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::Expr> expr)
@@ -183,7 +237,7 @@ namespace compiler
 
     llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::StringLiteral> stringLiteral)
     {
-        return this->builder->CreateGlobalStringPtr(llvm::StringRef(stringLiteral->literal), "", 0U, this->compiling.get());
+        return this->getAnchorString(stringLiteral->literal);
     }
 
     void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::ReturnStmt> returnStmt)
@@ -248,6 +302,8 @@ namespace compiler
         return this->builder->CreateCall(function, args);
     }
 
+    // Really I just want to create an empty ANCHOR string and use that
+
     void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarDeclStmt> varDeclStmt)
     {
         if (varDeclStmt->variableType == parser::Type::INTEGER)
@@ -258,8 +314,10 @@ namespace compiler
         }
         else if (varDeclStmt->variableType == parser::Type::STRING)
         {
-            llvm::Value *emptyString = this->builder->CreateGlobalStringPtr(llvm::StringRef(""), "", 0U, this->compiling.get());
-            llvm::Value *value = this->builder->CreateAlloca(llvm::Type::getInt8PtrTy(*this->context), nullptr, varDeclStmt->identifier);
+            // This pointer might not be okay?
+            // The problem is that we are making an identifier for value...
+            llvm::Value *emptyString = this->getAnchorString("");
+            llvm::Value *value = this->builder->CreateAlloca(llvm::Type::getInt32PtrTy(*this->context), nullptr, varDeclStmt->identifier);
             this->builder->CreateStore(emptyString, value);
         }
         else if (varDeclStmt->variableType == parser::Type::BOOLEAN)
@@ -352,4 +410,5 @@ namespace compiler
         llvm::Value *rhs = this->compile(outs, varAssignmentExpr->expr);
         return this->builder->CreateStore(rhs, value);
     }
+
 }
