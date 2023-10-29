@@ -10,12 +10,26 @@ namespace compiler
         this->builder = std::make_unique<llvm::IRBuilder<>>(*this->context);
 
         this->declarePrintFunction();
+        this->declareMallocFunction();
+        this->declareFreeFunction();
     }
 
     void Compiler::declarePrintFunction()
     {
         llvm::FunctionType *functionReturnType = llvm::FunctionType::get(llvm::Type::getInt32Ty(*this->context), true);
         llvm::Function::Create(functionReturnType, llvm::Function::ExternalLinkage, "printf", this->compiling.get());
+    }
+
+    void Compiler::declareMallocFunction()
+    {
+        llvm::FunctionType *functionReturnType = llvm::FunctionType::get(llvm::Type::getInt32PtrTy(*this->context), true);
+        llvm::Function::Create(functionReturnType, llvm::Function::ExternalLinkage, "malloc", this->compiling.get());
+    }
+
+    void Compiler::declareFreeFunction()
+    {
+        llvm::FunctionType *functionReturnType = llvm::FunctionType::get(llvm::Type::getVoidTy(*this->context), true);
+        llvm::Function::Create(functionReturnType, llvm::Function::ExternalLinkage, "free", this->compiling.get());
     }
 
     void Compiler::compile(llvm::raw_ostream &outs, parser::Program program)
@@ -88,7 +102,7 @@ namespace compiler
 
         this->compile(outs, functionStmt->stmts);
 
-        if (functionStmt->returnType == parser::Type::VOID) 
+        if (functionStmt->returnType == parser::Type::VOID)
         {
             llvm::Value *zero = llvm::ConstantInt::getIntegerValue(llvm::Type::getInt32Ty(*this->context), llvm::APInt(32, 0));
             this->builder->CreateRet(zero);
