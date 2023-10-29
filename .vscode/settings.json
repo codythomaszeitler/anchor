@@ -98,5 +98,6 @@
         "string_view": "cpp",
         "__verbose_abort": "cpp",
         "execution": "cpp"
-    }
+    },
+    "C_Cpp.intelliSenseEngineFallback": "enabled"
 }

@@ -16,17 +16,15 @@ declare void @memcpy(...)
 
 define i32 @main(...) {
   %1 = alloca %0, align 8
-  %2 = getelementptr inbounds %0, ptr %1, i32 0, i32 0
-  ; so %3 should now be a pointer TO a ptr. 
-
-  %output = call i8* @malloc(i32 14)
-  call void (...) @memcpy(i8* %output, ptr @1, i32 14)
-
-  store i8* %output, i8** %2
-
-  %printme = load i8*, i8** %2, align 4;
-
-  call i32 (...) @printf(ptr @0, i8* %printme)
-
+  %2 = call ptr (...) @malloc(i32 14)
+  %3 = getelementptr inbounds %0, ptr %1, i32 0, i32 0
+  call void (...) @memcpy(ptr %2, ptr @1, i32 14)
+  store ptr %2, ptr %3, align 8
+  %4 = getelementptr inbounds %0, ptr %1, i32 0, i32 1
+  store i32 14, ptr %4, align 4
+  %5 = getelementptr inbounds %0, ptr %1, i32 0, i32 0
+  %6 = load ptr, ptr %5, align 8
+  %7 = call i32 (...) @printf(ptr @0, ptr %6)
   ret i32 0
 }
+

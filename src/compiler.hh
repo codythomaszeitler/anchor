@@ -22,6 +22,8 @@ namespace compiler {
         std::unique_ptr<llvm::Module> compiling; 
         std::unique_ptr<llvm::IRBuilder<>> builder;
 
+        llvm::StructType* anchorStringStructType;
+
         void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::FunctionStmt> functionStmt);
         void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::PrintStmt> printStmt);
         void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::ReturnStmt> returnStmt);
@@ -46,6 +48,10 @@ namespace compiler {
         void declarePrintFunction();
         void declareMallocFunction();
         void declareFreeFunction();
+        void declareMemCpyFunction();
+
+        llvm::Value* get32BitInteger(int value);
+        llvm::Value* getAnchorString(std::string literal);
     public:
         Compiler();
         void compile(llvm::raw_ostream&, parser::Program);
