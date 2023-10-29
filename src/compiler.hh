@@ -44,6 +44,8 @@ namespace compiler {
         void compile(llvm::raw_ostream &outs, Body functionStmt);
     
         void declarePrintFunction();
+        void declareMallocFunction();
+        void declareFreeFunction();
     public:
         Compiler();
         void compile(llvm::raw_ostream&, parser::Program);
