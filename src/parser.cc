@@ -73,21 +73,21 @@ namespace parser
     {
         return this->errors.empty();
     }
-    
+
     Context::Context()
     {
         this->parent = nullptr;
     }
-    
+
     void Context::setType(std::string identifier, parser::Type type)
     {
         this->varIdToVarType[identifier] = type;
     }
-    
+
     parser::Type Context::getType(std::string identifier)
     {
-        Context* iterator = this;
-        while (iterator != nullptr) 
+        Context *iterator = this;
+        while (iterator != nullptr)
         {
             if (iterator->varIdToVarType.contains(identifier))
             {
@@ -302,7 +302,7 @@ namespace parser
         }
         return token.getRaw();
     }
-    
+
     parser::Type Parser::type()
     {
         lexer::Token variableType = this->pop();
@@ -330,7 +330,7 @@ namespace parser
 
     parser::Type Parser::parseReturnType()
     {
-        return this->type(); 
+        return this->type();
     }
 
     std::vector<std::shared_ptr<parser::FunctionArgStmt>> Parser::args()
@@ -449,7 +449,15 @@ namespace parser
             binaryOperation->operation = this->parseOperation();
             binaryOperation->right = this->expr();
             binaryOperation->type = parser::ExprType::BINARY_OP;
-            binaryOperation->returnType = parser::Type::INTEGER;
+
+            if (lhs->returnType == parser::Type::STRING || binaryOperation->right->returnType == parser::Type::STRING)
+            {
+                binaryOperation->returnType = parser::Type::STRING;
+            }
+            else
+            {
+                binaryOperation->returnType = parser::Type::INTEGER;
+            }
             return std::shared_ptr<parser::Expr>(binaryOperation);
         }
 

@@ -56,19 +56,29 @@ namespace compiler
         llvm::Value *anchorString = this->builder->CreateAlloca(structType);
 
         llvm::Value *size = this->get32BitInteger(literal.length() + 1);
-
-        llvm::Function *malloc = this->compiling->getFunction("malloc");
-        llvm::Value *allocated = this->builder->CreateCall(malloc, std::vector<llvm::Value *>{size});
+        llvm::Value *allocated = this->malloc(size);
 
         llvm::Value *stringBuffer = this->builder->CreateStructGEP(structType, anchorString, 0);
 
-        llvm::Function *memcpy = this->compiling->getFunction("memcpy");
-        this->builder->CreateCall(memcpy, std::vector<llvm::Value *>{allocated, source, size});
+        this->memcpy(allocated, source, size);
         this->builder->CreateStore(allocated, stringBuffer);
 
         llvm::Value *sizePointer = this->builder->CreateStructGEP(structType, anchorString, 1);
         this->builder->CreateStore(size, sizePointer);
         return anchorString;
+    }
+
+    llvm::Value *Compiler::malloc(llvm::Value *size)
+    {
+        llvm::Function *malloc = this->compiling->getFunction("malloc");
+        llvm::Value *allocated = this->builder->CreateCall(malloc, std::vector<llvm::Value *>{size});
+        return allocated;
+    }
+
+    void Compiler::memcpy(llvm::Value *destination, llvm::Value *source, llvm::Value *size)
+    {
+        llvm::Function *memcpy = this->compiling->getFunction("memcpy");
+        this->builder->CreateCall(memcpy, std::vector<llvm::Value *>{destination, source, size});
     }
 
     void Compiler::compile(llvm::raw_ostream &outs, parser::Program program)
@@ -253,8 +263,13 @@ namespace compiler
 
     llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::BinaryOperation> binaryOp)
     {
-        llvm::Value *left = this->compile(outs, binaryOp->left);
-        llvm::Value *right = this->compile(outs, binaryOp->right);
+        llvm::Value *left = this->compile(outs, binaryOp->left);   // This is an anchor string
+        llvm::Value *right = this->compile(outs, binaryOp->right); // This is also an anchor string
+
+        if (binaryOp->returnType == parser::Type::STRING)
+        {
+            return this->concat(left, right);
+        }
 
         if (binaryOp->operation == parser::Operation::ADD)
         {
@@ -358,6 +373,42 @@ namespace compiler
         {
             throw std::invalid_argument("Cannot compile variable expression with unknown type.");
         }
+    }
+
+    llvm::Value *Compiler::concat(llvm::Value *lhs, llvm::Value *rhs)
+    {
+        llvm::Value *lhsSize = this->getAnchorStringSize(lhs);
+        llvm::Value *rhsSize = this->getAnchorStringSize(rhs);
+
+        llvm::Value *concatSizeWithNullTerminators = this->builder->CreateAdd(lhsSize, rhsSize);
+        llvm::Value *one = this->get32BitInteger(1);
+
+        llvm::Value *concatSize = this->builder->CreateSub(concatSizeWithNullTerminators, one);
+        llvm::Value *allocated = this->malloc(concatSize);
+
+        llvm::Value *anchorString = this->builder->CreateAlloca(this->anchorStringStructType);
+        llvm::Value *anchorStringCharBufferPointer = this->builder->CreateStructGEP(this->anchorStringStructType, anchorString, 0);
+        llvm::Value *anchorStringCharBuffer = this->builder->CreateLoad(llvm::Type::getInt8PtrTy(*this->context), anchorStringCharBufferPointer);
+
+        llvm::Value *lhsCharBufferPointer = this->builder->CreateStructGEP(this->anchorStringStructType, lhs, 0);
+        llvm::Value *lhsCharBuffer = this->builder->CreateLoad(llvm::Type::getInt8PtrTy(*this->context), lhsCharBufferPointer);
+
+        llvm::Value *rhsCharBufferPointer = this->builder->CreateStructGEP(this->anchorStringStructType, rhs, 0);
+        llvm::Value *rhsCharBuffer = this->builder->CreateLoad(llvm::Type::getInt8PtrTy(*this->context), rhsCharBufferPointer);
+
+        llvm::Value *endOfLhs = this->builder->CreateInBoundsGEP(llvm::Type::getInt8Ty(*this->context), allocated, std::vector<llvm::Value *>{this->builder->CreateSub(lhsSize, one)});
+        this->memcpy(allocated, lhsCharBuffer, this->builder->CreateSub(lhsSize, one));
+        this->memcpy(endOfLhs, rhsCharBuffer, rhsSize);
+
+        this->builder->CreateStore(allocated, anchorStringCharBufferPointer);
+        return anchorString;
+    }
+
+    llvm::Value *Compiler::getAnchorStringSize(llvm::Value *anchorString)
+    {
+        llvm::Value *pointerToSize = this->builder->CreateStructGEP(this->anchorStringStructType, anchorString, 1);
+        llvm::Value *size = this->builder->CreateLoad(llvm::Type::getInt32Ty(*this->context), pointerToSize);
+        return size;
     }
 
     llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::BooleanLiteralExpr> booleanLiteralExpr)

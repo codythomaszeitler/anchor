@@ -548,3 +548,84 @@ function integer main() {
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "Hello, World!");
 }
+
+TEST(AnchorTest, ItShouldBeAbleToConcatenateTwoStrings)
+{
+    std::string sourceCode =R"(
+function integer main() {
+    string a;
+    a = "2";
+
+    string b;
+    b = "3";
+
+    print(a + b);
+
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "23");
+}
+
+TEST(AnchorTest, ItShouldBeAbleToConcatenateTwoStringsWhenRhsIsEmpty)
+{
+    std::string sourceCode =R"(
+function integer main() {
+    string a;
+    a = "2";
+
+    string b;
+    b = "";
+
+    print(a + b);
+
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "2");
+}
+
+TEST(AnchorTest, ItShouldBeAbleToConcatenateTwoStringsWhenLhsIsEmpty)
+{
+    std::string sourceCode =R"(
+function integer main() {
+    string a;
+    a = "";
+
+    string b;
+    b = "2";
+
+    print(a + b);
+
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "2");
+}
+
+TEST(AnchorTest, ItShouldBeAbleToConcatenateTwoStringsWhenBothAreEmpty)
+{
+    std::string sourceCode =R"(
+function integer main() {
+    string a;
+    a = "";
+
+    string b;
+    b = "";
+
+    print(a + b);
+
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "");
+}
+
