@@ -629,3 +629,67 @@ function integer main() {
     EXPECT_EQ(output, "");
 }
 
+TEST(AnchorTest, ItShouldBeAbleToConcatenateIntoVariable)
+{
+    std::string sourceCode =R"(
+function integer main() {
+    string a;
+    a = "2";
+
+    string b;
+    b = "3";
+
+    string c;
+    c = a + b;
+
+    print(c);
+
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "23");
+}
+
+TEST(AnchorTest, ItShouldBeAbleToConcatenateWithThreeStrings)
+{
+    std::string sourceCode =R"(
+function integer main() {
+    string a;
+    a = "2";
+
+    string b;
+    b = "3";
+
+    string c;
+    c = a + b;
+
+    string d;
+    d = c + "4";
+
+    print(d);
+
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "234");
+}
+
+TEST(AnchorTest, ItShouldBeAbleToConcatenateTwoLiterals)
+{
+    std::string sourceCode =R"(
+function integer main() {
+    string a;
+    a = "2" + "3";
+    print(a);
+
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "23");
+}

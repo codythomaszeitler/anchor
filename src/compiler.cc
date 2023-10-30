@@ -401,6 +401,9 @@ namespace compiler
         this->memcpy(endOfLhs, rhsCharBuffer, rhsSize);
 
         this->builder->CreateStore(allocated, anchorStringCharBufferPointer);
+
+        llvm::Value *anchorStringCharLength = this->builder->CreateStructGEP(this->anchorStringStructType, anchorString, 1);
+        this->builder->CreateStore(concatSize, anchorStringCharLength);
         return anchorString;
     }
 
