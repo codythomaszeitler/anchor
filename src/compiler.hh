@@ -52,6 +52,10 @@ namespace compiler {
 
         llvm::Value* get32BitInteger(int value);
         llvm::Value* getAnchorString(std::string literal);
+        llvm::Value* getAnchorStringSize(llvm::Value* anchorString);
+        llvm::Value* concat(llvm::Value* lhs, llvm::Value* rhs);
+        llvm::Value* malloc(llvm::Value* size);
+        void memcpy(llvm::Value* destination, llvm::Value* source, llvm::Value* size);
     public:
         Compiler();
         void compile(llvm::raw_ostream&, parser::Program);
