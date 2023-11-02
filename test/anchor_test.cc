@@ -693,3 +693,21 @@ function integer main() {
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "23");
 }
+
+TEST(AnchorTest, ItShouldBeAbleToConcatenateTwoLiteralsWithinAFunction)
+{
+    std::string sourceCode =R"(
+
+function void foo() {
+    print("2" + "3");
+};
+
+function integer main() {
+    foo();
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "23");
+}
