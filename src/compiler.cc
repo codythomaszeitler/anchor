@@ -143,8 +143,7 @@ namespace compiler
 
         if (functionStmt->returnType == parser::Type::VOID)
         {
-            llvm::Value *zero = llvm::ConstantInt::getIntegerValue(llvm::Type::getInt32Ty(*this->context), llvm::APInt(32, 0));
-            this->builder->CreateRet(zero);
+            this->builder->CreateRetVoid();
         }
 
         this->builder->SetInsertPoint(prev);
@@ -171,6 +170,11 @@ namespace compiler
         if (functionStmt->returnType == parser::Type::STRING)
         {
             llvm::Type *returnType = llvm::FunctionType::getInt32PtrTy(*this->context);
+            functionReturnType = llvm::FunctionType::get(returnType, args, false);
+        }
+        else if (functionStmt->returnType == parser::Type::VOID)
+        {
+            llvm::Type *returnType = llvm::FunctionType::getVoidTy(*this->context);
             functionReturnType = llvm::FunctionType::get(returnType, args, false);
         }
 

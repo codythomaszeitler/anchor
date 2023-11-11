@@ -14,7 +14,7 @@ declare void @free(...)
 
 declare void @memcpy(...)
 
-define i32 @bar(...) {
+define void @bar() {
   %1 = alloca %0, align 8
   %2 = call ptr (...) @malloc(i32 14)
   %3 = getelementptr inbounds %0, ptr %1, i32 0, i32 0
@@ -25,11 +25,11 @@ define i32 @bar(...) {
   %5 = getelementptr inbounds %0, ptr %1, i32 0, i32 0
   %6 = load ptr, ptr %5, align 8
   %7 = call i32 (...) @printf(ptr @0, ptr %6)
-  ret i32 0
+  ret void 
 }
 
 define i32 @main(...) {
-  %1 = call i32 (...) @bar()
+  call void @bar()
   ret i32 0
 }
 
