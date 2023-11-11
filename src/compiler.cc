@@ -13,10 +13,7 @@ namespace compiler
         this->declareMallocFunction();
         this->declareFreeFunction();
         this->declareMemCpyFunction();
-
-        llvm::Type *characterBufferPointer = llvm::Type::getInt8PtrTy(*this->context);
-        llvm::Type *numCharsCurrentlyInBuffer = llvm::Type::getInt32Ty(*this->context);
-        this->anchorStringStructType = llvm::StructType::create(std::vector<llvm::Type *>{characterBufferPointer, numCharsCurrentlyInBuffer});
+        this->genAnchorStringStructType();
     }
 
     void Compiler::declarePrintFunction()
@@ -41,6 +38,13 @@ namespace compiler
     {
         llvm::FunctionType *functionReturnType = llvm::FunctionType::get(llvm::Type::getVoidTy(*this->context), true);
         llvm::Function::Create(functionReturnType, llvm::Function::ExternalLinkage, "memcpy", this->compiling.get());
+    }
+
+    void Compiler::genAnchorStringStructType() 
+    {
+        llvm::Type *characterBufferPointer = llvm::Type::getInt8PtrTy(*this->context);
+        llvm::Type *numCharsCurrentlyInBuffer = llvm::Type::getInt32Ty(*this->context);
+        this->anchorStringStructType = llvm::StructType::create(std::vector<llvm::Type *>{characterBufferPointer, numCharsCurrentlyInBuffer});
     }
 
     llvm::Value *Compiler::get32BitInteger(int value)

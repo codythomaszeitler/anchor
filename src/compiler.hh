@@ -49,6 +49,7 @@ namespace compiler {
         void declareMallocFunction();
         void declareFreeFunction();
         void declareMemCpyFunction();
+        void genAnchorStringStructType();
 
         llvm::Value* get32BitInteger(int value);
         llvm::Value* getAnchorString(std::string literal);
