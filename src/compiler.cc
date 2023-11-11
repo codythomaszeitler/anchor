@@ -52,14 +52,14 @@ namespace compiler
         return llvm::ConstantInt::getIntegerValue(llvm::Type::getInt32Ty(*this->context), llvm::APInt(32, value));
     }
 
-    llvm::Value *Compiler::getAnchorString(std::string literal)
+    llvm::Value *Compiler::getAnchorString(const std::string &literal)
     {
         llvm::Value *source = this->builder->CreateGlobalStringPtr(llvm::StringRef(literal), "", 0U, this->compiling.get());
 
         llvm::StructType *structType = this->anchorStringStructType;
         llvm::Value *anchorString = this->builder->CreateAlloca(structType);
 
-        llvm::Value *size = this->get32BitInteger(literal.length() + 1);
+        llvm::Value *size = this->get32BitInteger(static_cast<int>(literal.length() + 1));
         llvm::Value *allocated = this->malloc(size);
 
         llvm::Value *stringBuffer = this->builder->CreateStructGEP(structType, anchorString, 0);
@@ -85,52 +85,53 @@ namespace compiler
         this->builder->CreateCall(memcpy, std::vector<llvm::Value *>{destination, source, size});
     }
 
-    void Compiler::compile(llvm::raw_ostream &outs, parser::Program program)
+    void Compiler::compile(llvm::raw_ostream &outs, const parser::Program &program)
     {
-        this->compile(outs, program.stmts);
+        this->compile(program.stmts);
         this->compiling->print(outs, nullptr);
     }
 
-    void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::Stmt> stmt)
+    void Compiler::compile(std::shared_ptr<parser::Stmt> stmt)
     {
-        if (stmt->type == parser::StmtType::FUNCTION)
+        using enum parser::StmtType;
+        if (stmt->type == FUNCTION)
         {
             std::shared_ptr<parser::FunctionStmt> functionStmt = std::static_pointer_cast<parser::FunctionStmt>(stmt);
-            this->compile(outs, functionStmt);
+            this->compile(functionStmt);
         }
-        else if (stmt->type == parser::StmtType::PRINT)
+        else if (stmt->type == PRINT)
         {
             std::shared_ptr<parser::PrintStmt> printStmt = std::static_pointer_cast<parser::PrintStmt>(stmt);
-            this->compile(outs, printStmt);
+            this->compile(printStmt);
         }
-        else if (stmt->type == parser::StmtType::RETURN)
+        else if (stmt->type == RETURN)
         {
             std::shared_ptr<parser::ReturnStmt> returnStmt = std::static_pointer_cast<parser::ReturnStmt>(stmt);
-            this->compile(outs, returnStmt);
+            this->compile(returnStmt);
         }
-        else if (stmt->type == parser::StmtType::VAR_DECL)
+        else if (stmt->type == VAR_DECL)
         {
             std::shared_ptr<parser::VarDeclStmt> varDeclStmt = std::static_pointer_cast<parser::VarDeclStmt>(stmt);
-            this->compile(outs, varDeclStmt);
+            this->compile(varDeclStmt);
         }
-        else if (stmt->type == parser::StmtType::EXPR)
+        else if (stmt->type == EXPR)
         {
             std::shared_ptr<parser::ExprStmt> exprStmt = std::static_pointer_cast<parser::ExprStmt>(stmt);
-            this->compile(outs, exprStmt);
+            this->compile(exprStmt);
         }
-        else if (stmt->type == parser::StmtType::IF)
+        else if (stmt->type == IF)
         {
             std::shared_ptr<parser::IfStmt> ifStmt = std::static_pointer_cast<parser::IfStmt>(stmt);
-            this->compile(outs, ifStmt);
+            this->compile(ifStmt);
         }
-        else if (stmt->type == parser::StmtType::WHILE)
+        else if (stmt->type == WHILE)
         {
             std::shared_ptr<parser::WhileStmt> whileStmt = std::static_pointer_cast<parser::WhileStmt>(stmt);
-            this->compile(outs, whileStmt);
+            this->compile(whileStmt);
         }
     }
 
-    void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::FunctionStmt> functionStmt)
+    void Compiler::compile(std::shared_ptr<parser::FunctionStmt> functionStmt)
     {
         llvm::Function *function = this->getFunctionWithNamedParams(functionStmt);
 
@@ -139,7 +140,7 @@ namespace compiler
         llvm::BasicBlock *functionBlock = llvm::BasicBlock::Create(*this->context, "", function);
         this->builder->SetInsertPoint(functionBlock);
 
-        this->compile(outs, functionStmt->stmts);
+        this->compile(functionStmt->stmts);
 
         if (functionStmt->returnType == parser::Type::VOID)
         {
@@ -181,7 +182,7 @@ namespace compiler
         return functionReturnType;
     }
 
-    std::vector<llvm::Type *> Compiler::functionStmtArgTypes(std::vector<std::shared_ptr<parser::FunctionArgStmt>> args)
+    std::vector<llvm::Type *> Compiler::functionStmtArgTypes(const std::vector<std::shared_ptr<parser::FunctionArgStmt>> &args)
     {
         std::vector<llvm::Type *> compiledArgs;
         for (const auto &arg : args)
@@ -191,15 +192,15 @@ namespace compiler
         return compiledArgs;
     }
 
-    void Compiler::compile(llvm::raw_ostream &outs, Body body)
+    void Compiler::compile(const Body &body)
     {
         for (const auto &stmt : body)
         {
-            this->compile(outs, stmt);
+            this->compile(stmt);
         }
     }
 
-    void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::PrintStmt> stmt)
+    void Compiler::compile(std::shared_ptr<parser::PrintStmt> stmt)
     {
         std::vector<llvm::Value *> args;
         if (stmt->expr->returnType == parser::Type::STRING)
@@ -211,7 +212,7 @@ namespace compiler
             args.push_back(this->builder->CreateGlobalStringPtr(llvm::StringRef("%d")));
         }
 
-        llvm::Value *expr = this->compile(outs, stmt->expr);
+        llvm::Value *expr = this->compile(stmt->expr);
 
         if (stmt->expr->returnType == parser::Type::STRING)
         {
@@ -230,42 +231,43 @@ namespace compiler
         }
     }
 
-    llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::Expr> expr)
+    llvm::Value *Compiler::compile(std::shared_ptr<parser::Expr> expr)
     {
-        if (expr->type == parser::ExprType::STRING_LITERAL)
+        using enum parser::ExprType;
+        if (expr->type == STRING_LITERAL)
         {
             std::shared_ptr<parser::StringLiteral> stringLiteral = std::static_pointer_cast<parser::StringLiteral>(expr);
-            return this->compile(outs, stringLiteral);
+            return this->compile(stringLiteral);
         }
-        else if (expr->type == parser::ExprType::INTEGER_LITERAL)
+        else if (expr->type == INTEGER_LITERAL)
         {
             std::shared_ptr<parser::IntegerLiteral> integerLiteral = std::static_pointer_cast<parser::IntegerLiteral>(expr);
-            return this->compile(outs, integerLiteral);
+            return this->compile(integerLiteral);
         }
-        else if (expr->type == parser::ExprType::BINARY_OP)
+        else if (expr->type == BINARY_OP)
         {
             std::shared_ptr<parser::BinaryOperation> binaryOperation = std::static_pointer_cast<parser::BinaryOperation>(expr);
-            return this->compile(outs, binaryOperation);
+            return this->compile(binaryOperation);
         }
-        else if (expr->type == parser::ExprType::FUNCTION)
+        else if (expr->type == FUNCTION)
         {
             std::shared_ptr<parser::FunctionExpr> functionExpr = std::static_pointer_cast<parser::FunctionExpr>(expr);
-            return this->compile(outs, functionExpr);
+            return this->compile(functionExpr);
         }
-        else if (expr->type == parser::ExprType::VAR)
+        else if (expr->type == VAR)
         {
             std::shared_ptr<parser::VarExpr> varExpr = std::static_pointer_cast<parser::VarExpr>(expr);
-            return this->compile(outs, varExpr);
+            return this->compile(varExpr);
         }
-        else if (expr->type == parser::ExprType::BOOLEAN)
+        else if (expr->type == BOOLEAN)
         {
             std::shared_ptr<parser::BooleanLiteralExpr> varExpr = std::static_pointer_cast<parser::BooleanLiteralExpr>(expr);
-            return this->compile(outs, varExpr);
+            return this->compile(varExpr);
         }
-        else if (expr->type == parser::ExprType::ASSIGNMENT)
+        else if (expr->type == ASSIGNMENT)
         {
             std::shared_ptr<parser::VarAssignmentExpr> varExpr = std::static_pointer_cast<parser::VarAssignmentExpr>(expr);
-            return this->compile(outs, varExpr);
+            return this->compile(varExpr);
         }
         else
         {
@@ -273,26 +275,26 @@ namespace compiler
         }
     }
 
-    llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::StringLiteral> stringLiteral)
+    llvm::Value *Compiler::compile(const std::shared_ptr<parser::StringLiteral> stringLiteral)
     {
         return this->getAnchorString(stringLiteral->literal);
     }
 
-    void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::ReturnStmt> returnStmt)
+    void Compiler::compile(std::shared_ptr<parser::ReturnStmt> returnStmt)
     {
-        llvm::Value *expr = this->compile(outs, returnStmt->expr);
+        llvm::Value *expr = this->compile(returnStmt->expr);
         this->builder->CreateRet(expr);
     }
 
-    llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::IntegerLiteral> integerLiteral)
+    llvm::Value *Compiler::compile(std::shared_ptr<parser::IntegerLiteral> integerLiteral)
     {
         return llvm::ConstantInt::getIntegerValue(llvm::Type::getInt32Ty(*this->context), llvm::APInt(32, integerLiteral->integer));
     }
 
-    llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::BinaryOperation> binaryOp)
+    llvm::Value *Compiler::compile(std::shared_ptr<parser::BinaryOperation> binaryOp)
     {
-        llvm::Value *left = this->compile(outs, binaryOp->left);
-        llvm::Value *right = this->compile(outs, binaryOp->right);
+        llvm::Value *left = this->compile(binaryOp->left);
+        llvm::Value *right = this->compile(binaryOp->right);
 
         if (binaryOp->returnType == parser::Type::STRING)
         {
@@ -329,14 +331,14 @@ namespace compiler
         }
     }
 
-    llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::FunctionExpr> functionExpr)
+    llvm::Value *Compiler::compile(std::shared_ptr<parser::FunctionExpr> functionExpr)
     {
         llvm::Function *function = this->compiling->getFunction(llvm::StringRef(functionExpr->identifier));
 
         std::vector<llvm::Value *> args;
         for (const auto &arg : functionExpr->args)
         {
-            llvm::Value *value = this->compile(outs, arg);
+            llvm::Value *value = this->compile(arg);
             llvm::Value *stackAllocation = this->builder->CreateAlloca(llvm::Type::getInt32Ty(*this->context));
             this->builder->CreateStore(value, stackAllocation);
             args.push_back(stackAllocation);
@@ -345,7 +347,7 @@ namespace compiler
         return this->builder->CreateCall(function, args);
     }
 
-    void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarDeclStmt> varDeclStmt)
+    void Compiler::compile(std::shared_ptr<parser::VarDeclStmt> varDeclStmt)
     {
         if (varDeclStmt->variableType == parser::Type::INTEGER)
         {
@@ -367,12 +369,12 @@ namespace compiler
         }
     }
 
-    void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::ExprStmt> exprStmt)
+    void Compiler::compile(std::shared_ptr<parser::ExprStmt> exprStmt)
     {
-        this->compile(outs, exprStmt->expr);
+        this->compile(exprStmt->expr);
     }
 
-    llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarExpr> varExpr)
+    llvm::Value *Compiler::compile(std::shared_ptr<parser::VarExpr> varExpr)
     {
         llvm::BasicBlock *bb = this->builder->GetInsertBlock();
         llvm::Value *value = bb->getValueSymbolTable()->lookup(llvm::StringRef(varExpr->identifier));
@@ -438,29 +440,29 @@ namespace compiler
         return size;
     }
 
-    llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::BooleanLiteralExpr> booleanLiteralExpr)
+    llvm::Value *Compiler::compile(std::shared_ptr<parser::BooleanLiteralExpr> booleanLiteralExpr)
     {
         llvm::Value *value = llvm::ConstantInt::getBool(llvm::Type::getInt1Ty(*this->context), booleanLiteralExpr->value);
         return value;
     }
 
-    void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::IfStmt> ifStmt)
+    void Compiler::compile(std::shared_ptr<parser::IfStmt> ifStmt)
     {
         llvm::BasicBlock *prev = this->builder->GetInsertBlock();
         llvm::BasicBlock *then = llvm::BasicBlock::Create(*this->context, "then", prev->getParent());
         llvm::BasicBlock *end = llvm::BasicBlock::Create(*this->context, "end", prev->getParent());
 
-        llvm::Value *condition = this->compile(outs, ifStmt->condition);
+        llvm::Value *condition = this->compile(ifStmt->condition);
         this->builder->CreateCondBr(condition, then, end);
 
         this->builder->SetInsertPoint(then);
-        this->compile(outs, ifStmt->stmts);
+        this->compile(ifStmt->stmts);
         this->builder->CreateBr(end);
 
         this->builder->SetInsertPoint(end);
     }
 
-    void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::WhileStmt> whileStmt)
+    void Compiler::compile(std::shared_ptr<parser::WhileStmt> whileStmt)
     {
         llvm::BasicBlock *prev = this->builder->GetInsertBlock();
 
@@ -471,22 +473,21 @@ namespace compiler
         this->builder->CreateBr(whileLoopStart);
 
         this->builder->SetInsertPoint(whileLoopStart);
-        llvm::Value *condition = this->compile(outs, whileStmt->condition);
+        llvm::Value *condition = this->compile(whileStmt->condition);
         this->builder->CreateCondBr(condition, body, end);
 
         this->builder->SetInsertPoint(body);
-        this->compile(outs, whileStmt->stmts);
+        this->compile(whileStmt->stmts);
         this->builder->CreateBr(whileLoopStart);
 
         this->builder->SetInsertPoint(end);
     }
 
-    llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarAssignmentExpr> varAssignmentExpr)
+    llvm::Value *Compiler::compile(std::shared_ptr<parser::VarAssignmentExpr> varAssignmentExpr)
     {
         llvm::BasicBlock *bb = this->builder->GetInsertBlock();
         llvm::Value *value = bb->getValueSymbolTable()->lookup(llvm::StringRef(varAssignmentExpr->identifier));
-        llvm::Value *rhs = this->compile(outs, varAssignmentExpr->expr);
+        llvm::Value *rhs = this->compile(varAssignmentExpr->expr);
         return this->builder->CreateStore(rhs, value);
     }
-
 }

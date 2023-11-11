@@ -4,7 +4,7 @@
 #include <fstream>
 #include <stdio.h>
 
-std::string runAnchor(std::string llvmAnchor)
+std::string runAnchor(const std::string& llvmAnchor)
 {
     static int counter = 0;
     std::string filename = "/tmp/" + std::to_string(counter) + ".test.anchor";
