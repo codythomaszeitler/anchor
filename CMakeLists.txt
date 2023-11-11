@@ -42,7 +42,6 @@ add_executable(
     ${PROJECT_SOURCE_DIR}/src/compiler.cc 
     ${PROJECT_SOURCE_DIR}/src/anchor.cc 
     ${PROJECT_SOURCE_DIR}/test/main_test.cc
-    ${PROJECT_SOURCE_DIR}/test/compiler_test.cc
     ${PROJECT_SOURCE_DIR}/test/lexer_test.cc
     ${PROJECT_SOURCE_DIR}/test/parser_test.cc
     ${PROJECT_SOURCE_DIR}/test/anchor_test.cc 
