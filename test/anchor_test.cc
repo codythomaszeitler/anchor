@@ -711,3 +711,23 @@ function integer main() {
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "23");
 }
+
+TEST(AnchorTest, ItShouldBeAbleToReturnAStringFromAFunction)
+{
+    std::string sourceCode =R"(
+
+function string foo() {
+    return "2";
+};
+
+function integer main() {
+    string a;
+    a = foo();
+    print (a);
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "2");
+}

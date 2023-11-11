@@ -135,6 +135,12 @@ namespace compiler
         }
 
         llvm::FunctionType *functionReturnType = llvm::FunctionType::get(llvm::Type::getInt32Ty(*this->context), args, true);
+        if (functionStmt->returnType == parser::Type::STRING)
+        {
+            llvm::Type *returnType = llvm::FunctionType::getInt32PtrTy(*this->context);
+            functionReturnType = llvm::FunctionType::get(returnType, args, false);
+        }
+
         llvm::Function *function = llvm::Function::Create(functionReturnType, llvm::Function::ExternalLinkage, functionStmt->identifier, this->compiling.get());
 
         for (int i = 0; i < functionStmt->args.size(); i++)
@@ -197,9 +203,6 @@ namespace compiler
             llvm::Function *printf = this->compiling->getFunction("printf");
             this->builder->CreateCall(printf, args);
         }
-
-        // Now this is where it gets interesting...
-        // If the expr is of type parser::Type::STRING
     }
 
     llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::Expr> expr)
@@ -263,8 +266,8 @@ namespace compiler
 
     llvm::Value *Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::BinaryOperation> binaryOp)
     {
-        llvm::Value *left = this->compile(outs, binaryOp->left);   // This is an anchor string
-        llvm::Value *right = this->compile(outs, binaryOp->right); // This is also an anchor string
+        llvm::Value *left = this->compile(outs, binaryOp->left);
+        llvm::Value *right = this->compile(outs, binaryOp->right);
 
         if (binaryOp->returnType == parser::Type::STRING)
         {
@@ -317,8 +320,6 @@ namespace compiler
         return this->builder->CreateCall(function, args);
     }
 
-    // Really I just want to create an empty ANCHOR string and use that
-
     void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarDeclStmt> varDeclStmt)
     {
         if (varDeclStmt->variableType == parser::Type::INTEGER)
@@ -329,8 +330,6 @@ namespace compiler
         }
         else if (varDeclStmt->variableType == parser::Type::STRING)
         {
-            // This pointer might not be okay?
-            // The problem is that we are making an identifier for value...
             llvm::Value *emptyString = this->getAnchorString("");
             llvm::Value *value = this->builder->CreateAlloca(llvm::Type::getInt32PtrTy(*this->context), nullptr, varDeclStmt->identifier);
             this->builder->CreateStore(emptyString, value);
