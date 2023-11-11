@@ -40,7 +40,7 @@ namespace compiler
         llvm::Function::Create(functionReturnType, llvm::Function::ExternalLinkage, "memcpy", this->compiling.get());
     }
 
-    void Compiler::genAnchorStringStructType() 
+    void Compiler::genAnchorStringStructType()
     {
         llvm::Type *characterBufferPointer = llvm::Type::getInt8PtrTy(*this->context);
         llvm::Type *numCharsCurrentlyInBuffer = llvm::Type::getInt32Ty(*this->context);
@@ -132,32 +132,12 @@ namespace compiler
 
     void Compiler::compile(llvm::raw_ostream &outs, std::shared_ptr<parser::FunctionStmt> functionStmt)
     {
-        std::vector<llvm::Type *> args;
-        for (const auto &arg : functionStmt->args)
-        {
-            args.push_back(llvm::Type::getInt64PtrTy(*this->context));
-        }
-
-        llvm::FunctionType *functionReturnType = llvm::FunctionType::get(llvm::Type::getInt32Ty(*this->context), args, true);
-        if (functionStmt->returnType == parser::Type::STRING)
-        {
-            llvm::Type *returnType = llvm::FunctionType::getInt32PtrTy(*this->context);
-            functionReturnType = llvm::FunctionType::get(returnType, args, false);
-        }
-
-        llvm::Function *function = llvm::Function::Create(functionReturnType, llvm::Function::ExternalLinkage, functionStmt->identifier, this->compiling.get());
-
-        for (int i = 0; i < functionStmt->args.size(); i++)
-        {
-            const auto astArg = functionStmt->args[i];
-            const auto llvmArg = function->getArg(i);
-            llvmArg->setName(astArg->identifier);
-        }
+        llvm::Function *function = this->getFunctionWithNamedParams(functionStmt);
 
         llvm::BasicBlock *prev = this->builder->GetInsertBlock();
 
-        llvm::BasicBlock *bb = llvm::BasicBlock::Create(*this->context, "", function);
-        this->builder->SetInsertPoint(bb);
+        llvm::BasicBlock *functionBlock = llvm::BasicBlock::Create(*this->context, "", function);
+        this->builder->SetInsertPoint(functionBlock);
 
         this->compile(outs, functionStmt->stmts);
 
@@ -168,6 +148,43 @@ namespace compiler
         }
 
         this->builder->SetInsertPoint(prev);
+    }
+
+    llvm::Function *Compiler::getFunctionWithNamedParams(std::shared_ptr<parser::FunctionStmt> astFunctionStmt)
+    {
+        llvm::FunctionType *functionType = this->functionType(astFunctionStmt);
+        llvm::Function *llvmFunction = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, astFunctionStmt->identifier, this->compiling.get());
+        for (int i = 0; i < astFunctionStmt->args.size(); i++)
+        {
+            const auto astArg = astFunctionStmt->args[i];
+            const auto llvmArg = llvmFunction->getArg(i);
+            llvmArg->setName(astArg->identifier);
+        }
+        return llvmFunction;
+    }
+
+    llvm::FunctionType *Compiler::functionType(std::shared_ptr<parser::FunctionStmt> functionStmt)
+    {
+        std::vector<llvm::Type *> args = this->functionStmtArgTypes(functionStmt->args);
+
+        llvm::FunctionType *functionReturnType = llvm::FunctionType::get(llvm::Type::getInt32Ty(*this->context), args, true);
+        if (functionStmt->returnType == parser::Type::STRING)
+        {
+            llvm::Type *returnType = llvm::FunctionType::getInt32PtrTy(*this->context);
+            functionReturnType = llvm::FunctionType::get(returnType, args, false);
+        }
+
+        return functionReturnType;
+    }
+
+    std::vector<llvm::Type *> Compiler::functionStmtArgTypes(std::vector<std::shared_ptr<parser::FunctionArgStmt>> args)
+    {
+        std::vector<llvm::Type *> compiledArgs;
+        for (const auto &arg : args)
+        {
+            compiledArgs.push_back(llvm::Type::getInt64PtrTy(*this->context));
+        }
+        return compiledArgs;
     }
 
     void Compiler::compile(llvm::raw_ostream &outs, Body body)
