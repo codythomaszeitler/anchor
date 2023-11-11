@@ -25,6 +25,10 @@ namespace compiler {
         llvm::StructType* anchorStringStructType;
 
         void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::FunctionStmt> functionStmt);
+        llvm::Function* getFunctionWithNamedParams(std::shared_ptr<parser::FunctionStmt> functionStmt);
+        llvm::FunctionType* functionType(std::shared_ptr<parser::FunctionStmt> functionStmt);
+        std::vector<llvm::Type*> functionStmtArgTypes(std::vector<std::shared_ptr<parser::FunctionArgStmt>> args);
+
         void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::PrintStmt> printStmt);
         void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::ReturnStmt> returnStmt);
         void compile(llvm::raw_ostream &outs, std::shared_ptr<parser::VarDeclStmt> varDeclStmt);

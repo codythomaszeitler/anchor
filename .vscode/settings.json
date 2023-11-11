@@ -99,5 +99,6 @@
         "__verbose_abort": "cpp",
         "execution": "cpp"
     },
-    "C_Cpp.intelliSenseEngineFallback": "enabled"
+    "C_Cpp.intelliSenseEngineFallback": "enabled",
+    "sonarlint.pathToCompileCommands": "${workspaceFolder}/build/compile_commands.json"
 }
