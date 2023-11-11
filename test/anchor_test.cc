@@ -19,7 +19,7 @@ std::string runAnchor(std::string llvmAnchor)
     std::cout << anchorRunCommand << std::endl;
 
     char path[PATH_MAX];
-    FILE* fp = popen(anchorRunCommand.c_str(), "r");
+    FILE *fp = popen(anchorRunCommand.c_str(), "r");
     if (fp == NULL)
     {
         return "Could not open subprocess to run anchor.";
@@ -122,7 +122,7 @@ TEST(AnchorTest, ItShouldPrintResultOfSimpleMultiplication)
 
 TEST(AnchorTest, ItShouldPrintResultOfFunctionWithNonComplexInteger)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 
 function integer foo() {
     return 1;
@@ -140,7 +140,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldPrintResultOfFunctionWithAnotherFunctionCall)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 
 function integer bar() {
     return 2;
@@ -162,7 +162,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldPrintResultOfFunctionAddedWithConstantOnLeftSide)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 
 function integer bar() {
     return 2;
@@ -184,7 +184,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldPrintResultOfFunctionAddedWithConstantOnRightSide)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 
 function integer bar() {
     print("In Bar");
@@ -207,7 +207,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldUseVariableToHoldIntegerAndPrint)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 function integer main() {
     integer a;
     a = 5;
@@ -222,7 +222,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldUseLocalVarInAnotherFunction)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 
 function integer bar() {
     integer a;
@@ -244,7 +244,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldUseTwoLocalVarsInAdditionStmt)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 function integer main() {
     integer a;
     a = 5;
@@ -262,7 +262,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldBeAbleToUseOneArgFunction)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 
 function integer bar(integer a) {
     return 5 + a;
@@ -283,7 +283,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldBeAbleToUseTwoArgFunctions)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 
 function integer bar(integer a, integer b) {
     return 5 + a + b;
@@ -304,7 +304,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldPrintTrueExpression)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 
 function integer main() {
     print(true);
@@ -318,7 +318,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldPrintFalseExpression)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 
 function integer main() {
     print(false);
@@ -332,7 +332,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldDeclAndAssignBooleanToTrue)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 
 function integer main() {
     boolean a;
@@ -349,7 +349,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldDeclAndAssignBooleanToFalse)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 
 function integer main() {
     boolean a;
@@ -365,7 +365,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldRunLessThanBooleanExpression)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 
 function integer main() {
     print(3 < 5);
@@ -379,7 +379,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldTakeIfBranchIfConditionSuccessful)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 
 function integer main() {
     if (3 < 5) 
@@ -396,7 +396,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldTakeIfBranchIfConditionNotSuccessful)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 
 function integer main() {
     if (5 < 3) 
@@ -411,10 +411,9 @@ function integer main() {
     EXPECT_EQ(output, "");
 }
 
-
 TEST(AnchorTest, ItShouldTakeWhileLoopWhileConditionTrue)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 
 function integer main() {
     integer a;
@@ -434,7 +433,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldDoFunctionCallWithWhileLoopInIt)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 
 function integer loopMe() {
     integer a;
@@ -460,7 +459,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldUseIfStmtWithGreaterThan)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 function integer main() {
     if (5 > 3) 
     {
@@ -476,7 +475,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldUseDoubleEqualsOnTrue)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 function integer main() {
     if (3 == 3) 
     {
@@ -492,7 +491,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldUseDoubleEqualsOnFalse)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 function integer main() {
     if (3 == 2) 
     {
@@ -508,7 +507,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldDoStringVarDeclAndAssign)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 
 function integer bar() {
     string a;
@@ -534,7 +533,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldSeePrintStatementFromVoidFunction)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 function void bar() {
     print("Hello, World!");
 };
@@ -551,7 +550,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldBeAbleToConcatenateTwoStrings)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 function integer main() {
     string a;
     a = "2";
@@ -571,7 +570,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldBeAbleToConcatenateTwoStringsWhenRhsIsEmpty)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 function integer main() {
     string a;
     a = "2";
@@ -591,7 +590,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldBeAbleToConcatenateTwoStringsWhenLhsIsEmpty)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 function integer main() {
     string a;
     a = "";
@@ -611,7 +610,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldBeAbleToConcatenateTwoStringsWhenBothAreEmpty)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 function integer main() {
     string a;
     a = "";
@@ -631,7 +630,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldBeAbleToConcatenateIntoVariable)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 function integer main() {
     string a;
     a = "2";
@@ -654,7 +653,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldBeAbleToConcatenateWithThreeStrings)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 function integer main() {
     string a;
     a = "2";
@@ -680,7 +679,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldBeAbleToConcatenateTwoLiterals)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 function integer main() {
     string a;
     a = "2" + "3";
@@ -696,7 +695,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldBeAbleToConcatenateTwoLiteralsWithinAFunction)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 
 function void foo() {
     print("2" + "3");
@@ -714,7 +713,7 @@ function integer main() {
 
 TEST(AnchorTest, ItShouldBeAbleToReturnAStringFromAFunction)
 {
-    std::string sourceCode =R"(
+    std::string sourceCode = R"(
 
 function string foo() {
     return "2";
@@ -730,4 +729,24 @@ function integer main() {
     std::string llvmAnchor = anchor::compile(sourceCode);
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "2");
+}
+
+TEST(AnchorTest, ItShouldBeAbleToConcatStringInReturnStmt)
+{
+    std::string sourceCode = R"(
+
+function string foo() {
+    return "2" + "3";
+};
+
+function integer main() {
+    string a;
+    a = foo();
+    print (a);
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    std::string output = runAnchor(llvmAnchor);
+    EXPECT_EQ(output, "23");
 }
