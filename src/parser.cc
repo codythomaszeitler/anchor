@@ -22,16 +22,16 @@ namespace parser
     {
     }
 
-    BadStmt::BadStmt(lexer::Token token, std::vector<lexer::TokenType> expected, std::string message) : offender(token), expected(expected), message(message)
+    BadStmt::BadStmt(const lexer::Token& token, const std::vector<lexer::TokenType>& expected, const std::string& message) : offender(token), expected(expected), message(message)
     {
     }
 
-    std::string InvalidSyntaxException::parseMessage(lexer::Token offender, std::vector<lexer::TokenType> expected)
+    std::string InvalidSyntaxException::parseMessage(const lexer::Token& offender, const std::vector<lexer::TokenType>& expected)
     {
-        auto asString = [](std::vector<lexer::TokenType> expected)
+        auto asString = [](const std::vector<lexer::TokenType>& toConvert)
         {
             std::vector<std::string> tokenTypeToStrings;
-            for (auto &tokenType : expected)
+            for (const auto &tokenType : toConvert)
             {
                 tokenTypeToStrings.push_back(lexer::tostring(tokenType));
             }
@@ -43,7 +43,7 @@ namespace parser
             throw std::invalid_argument("Cannot construct InvalidSyntaxException with empty list of expected tokens types.");
         }
 
-        if (std::find(expected.begin(), expected.end(), offender.getTokenType()) != expected.end())
+        if (std::ranges::find(expected, offender.getTokenType()) != expected.end())
         {
             throw std::invalid_argument("Cannot construct InvalidSyntaxException where expected tokens contains offender " + lexer::tostring(offender.getTokenType()) + " [" + asString(expected) + "].");
         }
@@ -51,11 +51,11 @@ namespace parser
         return "Expected: " + asString(expected) + " at line " + std::to_string(offender.getStart().getRow()) + ", column " + std::to_string(offender.getStart().getColumn()) + ", but found \"" + offender.getRaw() + "\".";
     }
 
-    InvalidSyntaxException::InvalidSyntaxException(lexer::Token offender, std::vector<lexer::TokenType> expected) : std::runtime_error(parser::InvalidSyntaxException::parseMessage(offender, expected)), offender(offender), expected(expected)
+    InvalidSyntaxException::InvalidSyntaxException(const lexer::Token& offender, const std::vector<lexer::TokenType>& expected) : std::runtime_error(parser::InvalidSyntaxException::parseMessage(offender, expected)), offender(offender), expected(expected)
     {
     }
 
-    ErrorLog::ErrorLog(std::string message) : message(message)
+    ErrorLog::ErrorLog(const std::string& message) : message(message)
     {
     }
 
@@ -64,27 +64,27 @@ namespace parser
         return std::runtime_error::what();
     }
 
-    std::string ErrorLog::getMessage()
+    std::string ErrorLog::getMessage() const
     {
         return this->message;
     }
 
-    bool Program::isSyntacticallyCorrect()
+    bool Program::isSyntacticallyCorrect() const 
     {
         return this->errors.empty();
     }
-
-    Context::Context()
+    
+    void Context::setParent(parser::Context* newParent)
     {
-        this->parent = nullptr;
+        this->parent = newParent;
     }
 
-    void Context::setType(std::string identifier, parser::Type type)
+    void Context::setType(const std::string& identifier, parser::Type type)
     {
         this->varIdToVarType[identifier] = type;
     }
 
-    parser::Type Context::getType(std::string identifier)
+    parser::Type Context::getType(const std::string& identifier)
     {
         Context *iterator = this;
         while (iterator != nullptr)
@@ -98,7 +98,7 @@ namespace parser
         return parser::Type::NOT_FOUND;
     }
 
-    Parser::Parser(std::deque<lexer::Token> tokens) : tokens(tokens)
+    Parser::Parser(const std::deque<lexer::Token>& tokens) : tokens(tokens)
     {
     }
 
@@ -116,28 +116,29 @@ namespace parser
 
     std::shared_ptr<Stmt> Parser::stmt()
     {
+        using enum lexer::TokenType;
         auto isType = [](lexer::TokenType tokenType)
         {
-            return tokenType == lexer::TokenType::INTEGER_TYPE || tokenType == lexer::TokenType::BOOLEAN_TYPE || tokenType == lexer::TokenType::STRING_TYPE;
+            return tokenType == INTEGER_TYPE || tokenType == BOOLEAN_TYPE || tokenType == STRING_TYPE;
         };
 
         lexer::Token maybeReturnOrFunctionDefinition = this->peek();
 
         try
         {
-            if (maybeReturnOrFunctionDefinition.getTokenType() == lexer::TokenType::RETURN)
+            if (maybeReturnOrFunctionDefinition.getTokenType() == RETURN)
             {
                 return this->returnStmt();
             }
-            else if (maybeReturnOrFunctionDefinition.getTokenType() == lexer::TokenType::PRINT)
+            else if (maybeReturnOrFunctionDefinition.getTokenType() == PRINT)
             {
                 return this->printStmt();
             }
-            else if (maybeReturnOrFunctionDefinition.getTokenType() == lexer::TokenType::IF)
+            else if (maybeReturnOrFunctionDefinition.getTokenType() == IF)
             {
                 return this->ifStmt();
             }
-            else if (maybeReturnOrFunctionDefinition.getTokenType() == lexer::TokenType::WHILE)
+            else if (maybeReturnOrFunctionDefinition.getTokenType() == WHILE)
             {
                 return this->whileStmt();
             }
@@ -145,7 +146,7 @@ namespace parser
             {
                 return this->varDeclStmt();
             }
-            else if (maybeReturnOrFunctionDefinition.getTokenType() == lexer::TokenType::FUNCTION)
+            else if (maybeReturnOrFunctionDefinition.getTokenType() == FUNCTION)
             {
                 return this->functionStmt();
             }
@@ -161,14 +162,15 @@ namespace parser
                 while (true)
                 {
                     lexer::Token popped = this->pop();
-                    if (popped.getTokenType() == lexer::TokenType::SEMICOLON || popped.getTokenType() == lexer::TokenType::END_OF_STREAM)
+                    if (popped.getTokenType() == SEMICOLON || popped.getTokenType() == END_OF_STREAM)
                     {
                         break;
                     }
                 }
             };
 
-            this->compiling.errors.push_back(parser::ErrorLog(ise.what()));
+
+            this->compiling.errors.emplace_back(ise.what());
             std::shared_ptr<Stmt> badStmt = std::make_shared<parser::BadStmt>(ise.offender, ise.expected, ise.what());
             badStmt->type = parser::StmtType::BAD;
 
@@ -187,11 +189,11 @@ namespace parser
 
         parser::Context parent = this->context;
         this->context = parser::Context();
-        this->context.parent = &parent;
+        this->context.setParent(&parent);
 
         std::vector<std::shared_ptr<parser::FunctionArgStmt>> args = this->args();
 
-        parser::FunctionStmt *functionStmt = new parser::FunctionStmt();
+        auto functionStmt = std::make_shared<parser::FunctionStmt>();
         functionStmt->type = parser::StmtType::FUNCTION;
         functionStmt->returnType = returnType;
         functionStmt->stmts = this->block();
@@ -201,7 +203,7 @@ namespace parser
         this->context = parent;
 
         this->consume(lexer::TokenType::SEMICOLON);
-        return std::shared_ptr<Stmt>(functionStmt);
+        return functionStmt;
     }
 
     std::shared_ptr<Stmt> Parser::printStmt()
@@ -209,11 +211,10 @@ namespace parser
         this->consume(lexer::TokenType::PRINT);
 
         this->consume(lexer::TokenType::LEFT_PAREN);
-        parser::PrintStmt *printStmtPointer = new parser::PrintStmt(this->expr());
-        printStmtPointer->type = parser::StmtType::PRINT;
+        auto printStmt = std::make_shared<parser::PrintStmt>(this->expr());
+        printStmt->type = parser::StmtType::PRINT;
         this->consume(lexer::TokenType::RIGHT_PAREN);
 
-        std::shared_ptr<parser::Stmt> printStmt(printStmtPointer);
         this->consume(lexer::TokenType::SEMICOLON);
 
         return printStmt;
@@ -221,7 +222,7 @@ namespace parser
 
     std::shared_ptr<Stmt> Parser::ifStmt()
     {
-        std::shared_ptr<parser::IfStmt> ifStmt = std::make_shared<parser::IfStmt>();
+        auto ifStmt = std::make_shared<parser::IfStmt>();
         this->consume(lexer::TokenType::IF);
 
         this->consume(lexer::TokenType::LEFT_PAREN);
@@ -237,7 +238,7 @@ namespace parser
 
     std::shared_ptr<Stmt> Parser::whileStmt()
     {
-        std::shared_ptr<parser::WhileStmt> whileStmt = std::make_shared<parser::WhileStmt>();
+        auto whileStmt = std::make_shared<parser::WhileStmt>();
         whileStmt->type = parser::StmtType::WHILE;
 
         this->consume(lexer::TokenType::WHILE);
@@ -256,9 +257,9 @@ namespace parser
     {
         this->consume(lexer::TokenType::RETURN);
 
-        parser::ReturnStmt *returnStmtPointer = new parser::ReturnStmt(this->expr());
-        returnStmtPointer->type = parser::StmtType::RETURN;
-        std::shared_ptr<parser::Stmt> returnStmt(returnStmtPointer);
+        auto returnStmt = std::make_shared<parser::ReturnStmt>(this->expr()); 
+        returnStmt->type = parser::StmtType::RETURN;
+
         this->consume(lexer::TokenType::SEMICOLON);
         return returnStmt;
     }
@@ -270,7 +271,7 @@ namespace parser
 
         this->consume(lexer::TokenType::SEMICOLON);
 
-        std::shared_ptr<parser::VarDeclStmt> varDeclStmt = std::make_shared<parser::VarDeclStmt>();
+        auto varDeclStmt = std::make_shared<parser::VarDeclStmt>();
         varDeclStmt->identifier = identifier;
         varDeclStmt->type = parser::StmtType::VAR_DECL;
         varDeclStmt->variableType = type;
@@ -305,26 +306,27 @@ namespace parser
 
     parser::Type Parser::type()
     {
+        using enum lexer::TokenType;
         lexer::Token variableType = this->pop();
-        if (variableType.getTokenType() == lexer::TokenType::INTEGER_TYPE)
+        if (variableType.getTokenType() == INTEGER_TYPE)
         {
             return parser::Type::INTEGER;
         }
-        else if (variableType.getTokenType() == lexer::TokenType::BOOLEAN_TYPE)
+        else if (variableType.getTokenType() == BOOLEAN_TYPE)
         {
             return parser::Type::BOOLEAN;
         }
-        else if (variableType.getTokenType() == lexer::TokenType::STRING_TYPE)
+        else if (variableType.getTokenType() == STRING_TYPE)
         {
             return parser::Type::STRING;
         }
-        else if (variableType.getTokenType() == lexer::TokenType::VOID_TYPE)
+        else if (variableType.getTokenType() == VOID_TYPE)
         {
             return parser::Type::VOID;
         }
         else
         {
-            throw parser::InvalidSyntaxException(variableType, std::vector<lexer::TokenType>{lexer::TokenType::INTEGER_TYPE, lexer::TokenType::BOOLEAN_TYPE});
+            throw parser::InvalidSyntaxException(variableType, std::vector<lexer::TokenType>{INTEGER_TYPE, BOOLEAN_TYPE});
         }
     }
 
@@ -343,7 +345,7 @@ namespace parser
             parser::Type type = this->type();
             std::string identifier = this->identifier();
 
-            std::shared_ptr<parser::FunctionArgStmt> arg = std::make_shared<parser::FunctionArgStmt>();
+            auto arg = std::make_shared<parser::FunctionArgStmt>();
             arg->type = parser::StmtType::FUNCTION_ARG;
             arg->identifier = identifier;
             arg->returnType = type;
@@ -364,21 +366,22 @@ namespace parser
 
     std::vector<std::shared_ptr<Stmt>> Parser::block()
     {
-        this->consume(lexer::TokenType::LEFT_BRACKET);
+        using enum lexer::TokenType;
+        this->consume(LEFT_BRACKET);
         std::vector<std::shared_ptr<Stmt>> stmts;
 
         parser::Context parent = this->context;
 
         this->context = parser::Context();
-        this->context.parent = &parent;
-        while (this->peek().getTokenType() != lexer::TokenType::RIGHT_BRACKET)
+        this->context.setParent(&parent);
+        while (this->peek().getTokenType() != RIGHT_BRACKET)
         {
             stmts.push_back(this->stmt());
         }
 
         this->context = parent;
 
-        this->consume(lexer::TokenType::RIGHT_BRACKET);
+        this->consume(RIGHT_BRACKET);
         return stmts;
     }
 
@@ -409,42 +412,43 @@ namespace parser
 
     std::shared_ptr<parser::Expr> Parser::expr()
     {
+        using enum lexer::TokenType;
         auto isBinaryOp = [](lexer::TokenType tokenType)
         {
-            return tokenType == lexer::TokenType::PLUS_SIGN ||
-                   tokenType == lexer::TokenType::MINUS_SIGN ||
-                   tokenType == lexer::TokenType::MULT_SIGN;
+            return tokenType == PLUS_SIGN ||
+                   tokenType == MINUS_SIGN ||
+                   tokenType == MULT_SIGN;
         };
 
         auto isBooleanBinaryOp = [](lexer::TokenType tokenType)
         {
-            return tokenType == lexer::TokenType::LESS_THAN_SIGN || tokenType == lexer::TokenType::GREATER_THAN_SIGN || tokenType == lexer::TokenType::DOUBLE_EQUALS;
+            return tokenType == LESS_THAN_SIGN || tokenType == GREATER_THAN_SIGN || tokenType == DOUBLE_EQUALS;
         };
 
         lexer::Token peeked = this->peek();
 
         std::shared_ptr<parser::Expr> lhs;
-        if (peeked.getTokenType() == lexer::TokenType::STRING)
+        if (peeked.getTokenType() == STRING)
         {
             lhs = this->parseStringLiteral();
         }
-        else if (peeked.getTokenType() == lexer::TokenType::IDENTIFIER)
+        else if (peeked.getTokenType() == IDENTIFIER)
         {
             lhs = this->parseFunctionOrVarExpr();
         }
-        else if (peeked.getTokenType() == lexer::TokenType::INTEGER)
+        else if (peeked.getTokenType() == INTEGER)
         {
             lhs = this->parseInteger();
         }
-        else if (peeked.getTokenType() == lexer::TokenType::TRUE ||
-                 peeked.getTokenType() == lexer::TokenType::FALSE)
+        else if (peeked.getTokenType() == TRUE ||
+                 peeked.getTokenType() == FALSE)
         {
             lhs = this->parseBoolean();
         }
 
         if (isBinaryOp(this->peek().getTokenType()))
         {
-            parser::BinaryOperation *binaryOperation = new parser::BinaryOperation();
+            auto binaryOperation = std::make_shared<parser::BinaryOperation>();
             binaryOperation->left = lhs;
             binaryOperation->operation = this->parseOperation();
             binaryOperation->right = this->expr();
@@ -458,12 +462,12 @@ namespace parser
             {
                 binaryOperation->returnType = parser::Type::INTEGER;
             }
-            return std::shared_ptr<parser::Expr>(binaryOperation);
+            return std::static_pointer_cast<parser::Expr>(binaryOperation);
         }
 
         if (isBooleanBinaryOp(this->peek().getTokenType()))
         {
-            std::shared_ptr<parser::BinaryOperation> binaryOperation = std::make_shared<parser::BinaryOperation>();
+            auto binaryOperation = std::make_shared<parser::BinaryOperation>();
             binaryOperation->left = lhs;
             binaryOperation->operation = this->parseOperation();
             binaryOperation->right = this->expr();
@@ -478,11 +482,11 @@ namespace parser
     std::shared_ptr<parser::Expr> Parser::parseStringLiteral()
     {
         lexer::Token popped = this->pop();
-        parser::StringLiteral *stringLiteral = new parser::StringLiteral();
+        auto stringLiteral = std::make_shared<parser::StringLiteral>();
         stringLiteral->literal = popped.getRaw().substr(1, popped.getRaw().length() - 2);
         stringLiteral->type = parser::ExprType::STRING_LITERAL;
         stringLiteral->returnType = parser::Type::STRING;
-        return std::shared_ptr<parser::Expr>(stringLiteral);
+        return stringLiteral;
     }
 
     std::shared_ptr<parser::Expr> Parser::parseFunctionOrVarExpr()
@@ -490,7 +494,7 @@ namespace parser
         std::string identifier = this->identifier();
         if (this->peek().getTokenType() == lexer::TokenType::LEFT_PAREN)
         {
-            parser::FunctionExpr *functionExpr = new parser::FunctionExpr();
+            auto functionExpr = std::make_shared<parser::FunctionExpr>();
             functionExpr->identifier = identifier;
             functionExpr->type = parser::ExprType::FUNCTION;
             functionExpr->returnType = parser::Type::INTEGER;
@@ -510,13 +514,13 @@ namespace parser
 
             this->consume(lexer::TokenType::RIGHT_PAREN);
 
-            return std::shared_ptr<Expr>(functionExpr);
+            return functionExpr;
         }
         else if (this->peek().getTokenType() == lexer::TokenType::EQUALS)
         {
             this->consume(lexer::TokenType::EQUALS);
 
-            std::shared_ptr<parser::VarAssignmentExpr> varAssignmentExpr = std::make_shared<parser::VarAssignmentExpr>();
+            auto varAssignmentExpr = std::make_shared<parser::VarAssignmentExpr>();
             varAssignmentExpr->type = parser::ExprType::ASSIGNMENT;
             varAssignmentExpr->returnType = this->context.getType(identifier);
             varAssignmentExpr->expr = this->expr();
@@ -526,7 +530,7 @@ namespace parser
         }
         else
         {
-            std::shared_ptr<parser::VarExpr> varExpr = std::make_shared<parser::VarExpr>();
+            auto varExpr = std::make_shared<parser::VarExpr>();
             varExpr->identifier = identifier;
             varExpr->returnType = this->context.getType(identifier);
             varExpr->type = parser::ExprType::VAR;
@@ -539,34 +543,35 @@ namespace parser
         lexer::Token integerToken = this->pop();
         std::string intAsString = integerToken.getRaw();
 
-        parser::IntegerLiteral *integerLiteral = new parser::IntegerLiteral();
+        auto integerLiteral = std::make_shared<parser::IntegerLiteral>();
         integerLiteral->integer = stoi(intAsString);
         integerLiteral->type = parser::ExprType::INTEGER_LITERAL;
         integerLiteral->returnType = parser::Type::INTEGER;
-        return std::shared_ptr<parser::Expr>(integerLiteral);
+        return std::static_pointer_cast<parser::Expr>(integerLiteral); 
     }
 
     std::shared_ptr<parser::Expr> Parser::parseBoolean()
     {
+        using enum lexer::TokenType;
         lexer::Token booleanPrimitive = this->pop();
 
-        std::shared_ptr<parser::BooleanLiteralExpr> booleanLiteralExpr = std::make_shared<parser::BooleanLiteralExpr>();
+        auto booleanLiteralExpr = std::make_shared<parser::BooleanLiteralExpr>();
         booleanLiteralExpr->type = parser::ExprType::BOOLEAN;
         booleanLiteralExpr->returnType = parser::Type::BOOLEAN;
 
-        if (booleanPrimitive.getTokenType() == lexer::TokenType::TRUE)
+        if (booleanPrimitive.getTokenType() == TRUE)
         {
             booleanLiteralExpr->value = true;
             return std::static_pointer_cast<parser::Expr>(booleanLiteralExpr);
         }
-        else if (booleanPrimitive.getTokenType() == lexer::TokenType::FALSE)
+        else if (booleanPrimitive.getTokenType() == FALSE)
         {
             booleanLiteralExpr->value = false;
             return std::static_pointer_cast<parser::Expr>(booleanLiteralExpr);
         }
         else
         {
-            throw parser::InvalidSyntaxException(booleanPrimitive, std::vector<lexer::TokenType>{lexer::TokenType::TRUE, lexer::TokenType::FALSE});
+            throw parser::InvalidSyntaxException(booleanPrimitive, std::vector<lexer::TokenType>{TRUE, FALSE});
         }
     }
 
