@@ -414,7 +414,6 @@ namespace compiler
 
         llvm::Value *anchorString = this->builder->CreateAlloca(this->anchorStringStructType);
         llvm::Value *anchorStringCharBufferPointer = this->builder->CreateStructGEP(this->anchorStringStructType, anchorString, 0);
-        llvm::Value *anchorStringCharBuffer = this->builder->CreateLoad(llvm::Type::getInt8PtrTy(*this->context), anchorStringCharBufferPointer);
 
         llvm::Value *lhsCharBufferPointer = this->builder->CreateStructGEP(this->anchorStringStructType, lhs, 0);
         llvm::Value *lhsCharBuffer = this->builder->CreateLoad(llvm::Type::getInt8PtrTy(*this->context), lhsCharBufferPointer);

@@ -127,14 +127,14 @@ namespace parser
     class ReturnStmt : public Stmt
     {
     public:
-        ReturnStmt(std::shared_ptr<Expr>);
+        explicit ReturnStmt(std::shared_ptr<Expr>);
         std::shared_ptr<Expr> expr;
     };
 
     class PrintStmt : public Stmt
     {
     public:
-        PrintStmt(std::shared_ptr<Expr>);
+        explicit PrintStmt(std::shared_ptr<Expr>);
         std::shared_ptr<Expr> expr;
     };
 
@@ -144,7 +144,7 @@ namespace parser
         lexer::Token offender;
         std::vector<lexer::TokenType> expected;
         std::string message;
-        BadStmt(lexer::Token, std::vector<lexer::TokenType>, std::string);
+        BadStmt(const lexer::Token&, const std::vector<lexer::TokenType>&, const std::string&);
     };
 
     class IntegerLiteral : public Expr
@@ -182,14 +182,14 @@ namespace parser
     class InvalidSyntaxException : public std::runtime_error
     {
     private:
-        static std::string parseMessage(lexer::Token offender, std::vector<lexer::TokenType> expected);
+        static std::string parseMessage(const lexer::Token& offender, const std::vector<lexer::TokenType>& expected);
 
     public:
         lexer::Token offender;
         std::vector<lexer::TokenType> expected;
 
-        InvalidSyntaxException(lexer::Token offender, std::vector<lexer::TokenType> expected);
-        virtual const char *what() const throw();
+        InvalidSyntaxException(const lexer::Token& offender, const std::vector<lexer::TokenType>& expected);
+        const char *what() const throw() override;
     };
 
     class ErrorLog
@@ -198,8 +198,8 @@ namespace parser
         std::string message;
 
     public:
-        ErrorLog(std::string);
-        std::string getMessage();
+        explicit ErrorLog(const std::string&);
+        std::string getMessage() const;
     };
 
     class Program : public Stmt
@@ -212,20 +212,19 @@ namespace parser
             return std::static_pointer_cast<T>(this->stmts.at(index));
         }
 
-        bool isSyntacticallyCorrect();
+        bool isSyntacticallyCorrect() const;
         std::vector<parser::ErrorLog> errors;
     };
 
     class Context {
     private:
         std::map<std::string, parser::Type> varIdToVarType;
+        parser::Context* parent = nullptr;
     public:
-        Context();
+        void setParent(parser::Context* parent);
 
-        parser::Context* parent;
-
-        void setType(std::string, parser::Type);
-        parser::Type getType(std::string);
+        void setType(const std::string&, parser::Type);
+        parser::Type getType(const std::string&);
     };
 
     class Parser
@@ -262,7 +261,7 @@ namespace parser
         void consume(lexer::TokenType);
 
     public:
-        Parser(std::deque<lexer::Token>);
+        explicit Parser(const std::deque<lexer::Token>&);
         parser::Program parse();
     };
 };
