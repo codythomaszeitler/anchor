@@ -17,12 +17,12 @@ lexer::Location::Location(int row, int column) : row(row), column(column)
     }
 }
 
-int lexer::Location::getRow()
+int lexer::Location::getRow() const
 {
     return this->row;
 }
 
-int lexer::Location::getColumn()
+int lexer::Location::getColumn() const
 {
     return this->column;
 }
@@ -40,7 +40,7 @@ bool lexer::Location::operator!=(const Location &that) const
 std::string lexer::tostring(lexer::TokenType tokenType)
 {
     static std::map<lexer::TokenType, std::string> map;
-    if (map.size() == 0)
+    if (map.empty())
     {
         map[lexer::TokenType::INTEGER_TYPE] = "INTEGER_TYPE";
         map[lexer::TokenType::INTEGER] = "INTEGER";

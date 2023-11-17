@@ -1,4 +1,3 @@
-
 #ifndef PARSER_H
 #define PARSER_H
 
@@ -30,6 +29,8 @@ namespace parser
         BOOLEAN,
         NOT_FOUND
     };
+
+    std::string tostring(parser::Type);
 
     class Stmt
     {
@@ -145,6 +146,7 @@ namespace parser
         std::vector<lexer::TokenType> expected;
         std::string message;
         BadStmt(const lexer::Token&, const std::vector<lexer::TokenType>&, const std::string&);
+        BadStmt(const lexer::Token&, const std::string&);
     };
 
     class IntegerLiteral : public Expr
@@ -189,6 +191,19 @@ namespace parser
         std::vector<lexer::TokenType> expected;
 
         InvalidSyntaxException(const lexer::Token& offender, const std::vector<lexer::TokenType>& expected);
+        const char *what() const throw() override;
+    };
+
+    class InvalidTypeException : public std::runtime_error 
+    {
+    private:
+        static std::string parseMessage(const lexer::Token& offender, std::shared_ptr<parser::BinaryOperation> binaryOp);
+
+    public:
+        lexer::Token offender;
+        std::shared_ptr<parser::BinaryOperation> binaryOp;
+
+        InvalidTypeException(const lexer::Token& offender, std::shared_ptr<parser::BinaryOperation> binaryOp);
         const char *what() const throw() override;
     };
 

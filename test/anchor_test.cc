@@ -750,3 +750,23 @@ function integer main() {
     std::string output = runAnchor(llvmAnchor);
     EXPECT_EQ(output, "23");
 }
+
+// This really should be a front end error?
+TEST(AnchorTest, ItShouldThrowCompileTimeErrorIfAddingStringAndIntTypes)
+{
+    std::string sourceCode = R"(
+
+function integer main() {
+    string a;
+    a = "3";
+    integer b;
+    b = 2;
+
+    print (a + b);
+
+    return 0;
+};)";
+
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    EXPECT_EQ(llvmAnchor, "Expected: STRING at line 9, column 14, but found INTEGER.\n");
+}
