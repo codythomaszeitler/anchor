@@ -17,8 +17,8 @@ namespace lexer
     public:
         Location(int, int);
 
-        int getRow();
-        int getColumn();
+        int getRow() const;
+        int getColumn() const;
 
         bool operator==(const Location &) const;
         bool operator!=(const Location &) const;

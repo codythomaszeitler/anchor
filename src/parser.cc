@@ -11,9 +11,25 @@
 #include "util.hh"
 #include <map>
 #include <string_view>
+#include <iterator>
 
 namespace parser
 {
+    std::string tostring(parser::Type type)
+    {
+        static std::map<parser::Type, std::string> map;
+        if (map.empty())
+        {
+            using enum parser::Type;
+            map[VOID] = "VOID";
+            map[INTEGER] = "INTEGER";
+            map[STRING] = "STRING";
+            map[BOOLEAN] = "BOOLEAN";
+        }
+
+        return map[type];
+    }
+
     ReturnStmt::ReturnStmt(std::shared_ptr<Expr> expr) : expr(std::move(expr))
     {
     }
@@ -22,13 +38,18 @@ namespace parser
     {
     }
 
-    BadStmt::BadStmt(const lexer::Token& token, const std::vector<lexer::TokenType>& expected, const std::string& message) : offender(token), expected(expected), message(message)
+    BadStmt::BadStmt(const lexer::Token &token, const std::vector<lexer::TokenType> &expected, const std::string &message) : offender(token), expected(expected), message(message)
     {
     }
-
-    std::string InvalidSyntaxException::parseMessage(const lexer::Token& offender, const std::vector<lexer::TokenType>& expected)
+    
+    BadStmt::BadStmt(const lexer::Token& token, const std::string& message) : offender(token), message(message)
     {
-        auto asString = [](const std::vector<lexer::TokenType>& toConvert)
+        
+    }
+
+    std::string InvalidSyntaxException::parseMessage(const lexer::Token &offender, const std::vector<lexer::TokenType> &expected)
+    {
+        auto asString = [](const std::vector<lexer::TokenType> &toConvert)
         {
             std::vector<std::string> tokenTypeToStrings;
             for (const auto &tokenType : toConvert)
@@ -43,7 +64,7 @@ namespace parser
             throw std::invalid_argument("Cannot construct InvalidSyntaxException with empty list of expected tokens types.");
         }
 
-        if (std::ranges::find(expected, offender.getTokenType()) != expected.end())
+        if (std::find(expected.begin(), expected.end(), offender.getTokenType()) != expected.end())
         {
             throw std::invalid_argument("Cannot construct InvalidSyntaxException where expected tokens contains offender " + lexer::tostring(offender.getTokenType()) + " [" + asString(expected) + "].");
         }
@@ -51,15 +72,29 @@ namespace parser
         return "Expected: " + asString(expected) + " at line " + std::to_string(offender.getStart().getRow()) + ", column " + std::to_string(offender.getStart().getColumn()) + ", but found \"" + offender.getRaw() + "\".";
     }
 
-    InvalidSyntaxException::InvalidSyntaxException(const lexer::Token& offender, const std::vector<lexer::TokenType>& expected) : std::runtime_error(parser::InvalidSyntaxException::parseMessage(offender, expected)), offender(offender), expected(expected)
+    InvalidSyntaxException::InvalidSyntaxException(const lexer::Token &offender, const std::vector<lexer::TokenType> &expected) : std::runtime_error(parser::InvalidSyntaxException::parseMessage(offender, expected)), offender(offender), expected(expected)
     {
     }
 
-    ErrorLog::ErrorLog(const std::string& message) : message(message)
+    std::string InvalidTypeException::parseMessage(const lexer::Token &offender, std::shared_ptr<parser::BinaryOperation> binaryOp)
+    {
+        return "Expected: " + parser::tostring(binaryOp->left->returnType) + " at line " + std::to_string(offender.getStart().getRow()) + ", column " + std::to_string(offender.getStart().getColumn()) + ", but found " + parser::tostring(binaryOp->right->returnType) + ".";
+    }
+
+    InvalidTypeException::InvalidTypeException(const lexer::Token &offender, std::shared_ptr<parser::BinaryOperation> binaryOp) : std::runtime_error(parser::InvalidTypeException::parseMessage(offender, binaryOp)), offender(offender), binaryOp(binaryOp)
+    {
+    }
+
+    ErrorLog::ErrorLog(const std::string &message) : message(message)
     {
     }
 
     const char *InvalidSyntaxException::what() const throw()
+    {
+        return std::runtime_error::what();
+    }
+
+    const char *InvalidTypeException::what() const throw()
     {
         return std::runtime_error::what();
     }
@@ -69,22 +104,22 @@ namespace parser
         return this->message;
     }
 
-    bool Program::isSyntacticallyCorrect() const 
+    bool Program::isSyntacticallyCorrect() const
     {
         return this->errors.empty();
     }
-    
-    void Context::setParent(parser::Context* newParent)
+
+    void Context::setParent(parser::Context *newParent)
     {
         this->parent = newParent;
     }
 
-    void Context::setType(const std::string& identifier, parser::Type type)
+    void Context::setType(const std::string &identifier, parser::Type type)
     {
         this->varIdToVarType[identifier] = type;
     }
 
-    parser::Type Context::getType(const std::string& identifier)
+    parser::Type Context::getType(const std::string &identifier)
     {
         Context *iterator = this;
         while (iterator != nullptr)
@@ -98,7 +133,7 @@ namespace parser
         return parser::Type::NOT_FOUND;
     }
 
-    Parser::Parser(const std::deque<lexer::Token>& tokens) : tokens(tokens)
+    Parser::Parser(const std::deque<lexer::Token> &tokens) : tokens(tokens)
     {
     }
 
@@ -120,6 +155,18 @@ namespace parser
         auto isType = [](lexer::TokenType tokenType)
         {
             return tokenType == INTEGER_TYPE || tokenType == BOOLEAN_TYPE || tokenType == STRING_TYPE;
+        };
+
+        auto syncWithSemicolon = [&]()
+        {
+            while (true)
+            {
+                lexer::Token popped = this->pop();
+                if (popped.getTokenType() == SEMICOLON || popped.getTokenType() == END_OF_STREAM)
+                {
+                    break;
+                }
+            }
         };
 
         lexer::Token maybeReturnOrFunctionDefinition = this->peek();
@@ -157,21 +204,18 @@ namespace parser
         }
         catch (parser::InvalidSyntaxException &ise)
         {
-            auto syncWithSemicolon = [&]()
-            {
-                while (true)
-                {
-                    lexer::Token popped = this->pop();
-                    if (popped.getTokenType() == SEMICOLON || popped.getTokenType() == END_OF_STREAM)
-                    {
-                        break;
-                    }
-                }
-            };
-
-
             this->compiling.errors.emplace_back(ise.what());
             std::shared_ptr<Stmt> badStmt = std::make_shared<parser::BadStmt>(ise.offender, ise.expected, ise.what());
+            badStmt->type = parser::StmtType::BAD;
+
+            syncWithSemicolon();
+
+            return badStmt;
+        }
+        catch (parser::InvalidTypeException &ite)
+        {
+            this->compiling.errors.emplace_back(ite.what());
+            std::shared_ptr<Stmt> badStmt = std::make_shared<parser::BadStmt>(ite.offender, ite.what());
             badStmt->type = parser::StmtType::BAD;
 
             syncWithSemicolon();
@@ -257,7 +301,7 @@ namespace parser
     {
         this->consume(lexer::TokenType::RETURN);
 
-        auto returnStmt = std::make_shared<parser::ReturnStmt>(this->expr()); 
+        auto returnStmt = std::make_shared<parser::ReturnStmt>(this->expr());
         returnStmt->type = parser::StmtType::RETURN;
 
         this->consume(lexer::TokenType::SEMICOLON);
@@ -446,13 +490,20 @@ namespace parser
             lhs = this->parseBoolean();
         }
 
-        if (isBinaryOp(this->peek().getTokenType()))
+        lexer::Token rhsPeek = this->peek();
+        if (isBinaryOp(rhsPeek.getTokenType()))
         {
             auto binaryOperation = std::make_shared<parser::BinaryOperation>();
             binaryOperation->left = lhs;
             binaryOperation->operation = this->parseOperation();
             binaryOperation->right = this->expr();
             binaryOperation->type = parser::ExprType::BINARY_OP;
+
+            // There should have been an error right here.
+            if (binaryOperation->left->returnType != binaryOperation->right->returnType)
+            {
+                throw parser::InvalidTypeException(rhsPeek, binaryOperation);
+            }
 
             if (lhs->returnType == parser::Type::STRING || binaryOperation->right->returnType == parser::Type::STRING)
             {
@@ -547,7 +598,7 @@ namespace parser
         integerLiteral->integer = stoi(intAsString);
         integerLiteral->type = parser::ExprType::INTEGER_LITERAL;
         integerLiteral->returnType = parser::Type::INTEGER;
-        return std::static_pointer_cast<parser::Expr>(integerLiteral); 
+        return std::static_pointer_cast<parser::Expr>(integerLiteral);
     }
 
     std::shared_ptr<parser::Expr> Parser::parseBoolean()
