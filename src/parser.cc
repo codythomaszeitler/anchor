@@ -131,6 +131,25 @@ namespace parser
         }
         return parser::Type::NOT_FOUND;
     }
+    
+    void Context::setFunctionType(const std::string& identifier, parser::Type type)
+    {
+        this->functionIdToType[identifier] = type;
+    }
+    
+    parser::Type Context::getFunctionType(const std::string& identifier)
+    {
+        Context *iterator = this;
+        while (iterator != nullptr)
+        {
+            if (iterator->functionIdToType.contains(identifier))
+            {
+                return iterator->functionIdToType[identifier];
+            }
+            iterator = iterator->parent;
+        }
+        return parser::Type::NOT_FOUND;
+    }
 
     Parser::Parser(const std::deque<lexer::Token> &tokens) : tokens(tokens)
     {
@@ -234,6 +253,7 @@ namespace parser
         functionStmt->args = args;
 
         this->context = parent;
+        this->context.setFunctionType(functionStmt->identifier, functionStmt->returnType);
 
         this->consume(lexer::TokenType::SEMICOLON);
         return functionStmt;
@@ -253,7 +273,7 @@ namespace parser
 
         this->consume(lexer::TokenType::SEMICOLON);
 
-        if (parser::Expr::hasTypeError(expr)) 
+        if (parser::Expr::hasTypeError(expr))
         {
             this->compiling.errors.emplace_back(parser::Expr::getTypeErrorMessage(peeked, expr));
         }
@@ -324,6 +344,7 @@ namespace parser
 
     std::shared_ptr<Stmt> Parser::varAssignmentStmtOrExpr()
     {
+        lexer::Token peeked = this->peek();
         std::shared_ptr<parser::Expr> expr = this->expr();
 
         std::shared_ptr<parser::ExprStmt> exprStmt = std::make_unique<parser::ExprStmt>();
@@ -331,6 +352,11 @@ namespace parser
         exprStmt->expr = expr;
 
         this->consume(lexer::TokenType::SEMICOLON);
+
+        if (parser::Expr::hasTypeError(expr))
+        {
+            this->compiling.errors.emplace_back(parser::Expr::getTypeErrorMessage(peeked, expr));
+        }
 
         return exprStmt;
     }
@@ -344,17 +370,33 @@ namespace parser
 
             return binaryOp->left->returnType != binaryOp->right->returnType;
         }
+        else if (expr->type == parser::ExprType::ASSIGNMENT)
+        {
+            std::shared_ptr<parser::VarAssignmentExpr> varAssignmentExpr = std::static_pointer_cast<parser::VarAssignmentExpr>(expr);
+
+            return varAssignmentExpr->returnType != varAssignmentExpr->expr->returnType;
+        }
 
         return false;
     }
 
-    std::string Expr::getTypeErrorMessage(const lexer::Token& peeked, std::shared_ptr<parser::Expr> expr)
+    std::string Expr::getTypeErrorMessage(const lexer::Token &peeked, std::shared_ptr<parser::Expr> expr)
     {
+        auto parseErrorMessage = [&peeked](std::shared_ptr<parser::Expr> left, std::shared_ptr<parser::Expr> right)
+        {
+            return "Type Error: Expression at line " + std::to_string(peeked.getStart().getRow()) + ", column " + std::to_string(peeked.getStart().getColumn()) + " had " + parser::tostring(left->returnType) + " on left, " + parser::tostring(right->returnType) + " on right.";
+        };
+
         if (expr->type == parser::ExprType::BINARY_OP)
         {
             std::shared_ptr<parser::BinaryOperation> binaryOp = std::static_pointer_cast<parser::BinaryOperation>(expr);
 
-            return "Type Error: Expression at line " + std::to_string(peeked.getStart().getRow()) + ", column " + std::to_string(peeked.getStart().getColumn()) + " had " + parser::tostring(binaryOp->left->returnType) + " on left, " + parser::tostring(binaryOp->right->returnType) + " on right.";
+            return parseErrorMessage(binaryOp->left, binaryOp->right);
+        }
+        else if (expr->type == parser::ExprType::ASSIGNMENT)
+        {
+            std::shared_ptr<parser::VarAssignmentExpr> varAssignmentExpr = std::static_pointer_cast<parser::VarAssignmentExpr>(expr);
+            return parseErrorMessage(varAssignmentExpr, varAssignmentExpr->expr);
         }
         return std::string("");
     };
@@ -563,7 +605,7 @@ namespace parser
             auto functionExpr = std::make_shared<parser::FunctionExpr>();
             functionExpr->identifier = identifier;
             functionExpr->type = parser::ExprType::FUNCTION;
-            functionExpr->returnType = parser::Type::INTEGER;
+            functionExpr->returnType = this->context.getFunctionType(functionExpr->identifier);
 
             this->consume(lexer::TokenType::LEFT_PAREN);
 

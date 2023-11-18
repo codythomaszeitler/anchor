@@ -237,12 +237,16 @@ namespace parser
     class Context {
     private:
         std::map<std::string, parser::Type> varIdToVarType;
+        std::map<std::string, parser::Type> functionIdToType;
         parser::Context* parent = nullptr;
     public:
         void setParent(parser::Context* parent);
 
         void setType(const std::string&, parser::Type);
         parser::Type getType(const std::string&);
+
+        void setFunctionType(const std::string&, parser::Type);
+        parser::Type getFunctionType(const std::string&);
     };
 
     class Parser

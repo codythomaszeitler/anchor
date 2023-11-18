@@ -768,3 +768,16 @@ function integer main() {
     std::string llvmAnchor = anchor::compile(sourceCode);
     EXPECT_EQ(llvmAnchor, "Type Error: Expression at line 9, column 12 had STRING on left, INTEGER on right.\n");
 }
+
+TEST(AnchorTest, ItShouldThrowCompileTimeErrorIfAssigningIntegerOntoString)
+{
+    std::string sourceCode = R"(
+
+function integer main() {
+    string a;
+    a = 3;
+    return 0;
+};)";
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    EXPECT_EQ(llvmAnchor, "Type Error: Expression at line 5, column 5 had STRING on left, INTEGER on right.\n");
+}
