@@ -41,10 +41,9 @@ namespace parser
     BadStmt::BadStmt(const lexer::Token &token, const std::vector<lexer::TokenType> &expected, const std::string &message) : offender(token), expected(expected), message(message)
     {
     }
-    
-    BadStmt::BadStmt(const lexer::Token& token, const std::string& message) : offender(token), message(message)
+
+    BadStmt::BadStmt(const lexer::Token &token, const std::string &message) : offender(token), message(message)
     {
-        
     }
 
     std::string InvalidSyntaxException::parseMessage(const lexer::Token &offender, const std::vector<lexer::TokenType> &expected)
@@ -212,16 +211,6 @@ namespace parser
 
             return badStmt;
         }
-        catch (parser::InvalidTypeException &ite)
-        {
-            this->compiling.errors.emplace_back(ite.what());
-            std::shared_ptr<Stmt> badStmt = std::make_shared<parser::BadStmt>(ite.offender, ite.what());
-            badStmt->type = parser::StmtType::BAD;
-
-            syncWithSemicolon();
-
-            return badStmt;
-        }
     }
 
     std::shared_ptr<Stmt> Parser::functionStmt()
@@ -255,11 +244,19 @@ namespace parser
         this->consume(lexer::TokenType::PRINT);
 
         this->consume(lexer::TokenType::LEFT_PAREN);
-        auto printStmt = std::make_shared<parser::PrintStmt>(this->expr());
+
+        lexer::Token peeked = this->peek();
+        std::shared_ptr<parser::Expr> expr = this->expr();
+        auto printStmt = std::make_shared<parser::PrintStmt>(expr);
         printStmt->type = parser::StmtType::PRINT;
         this->consume(lexer::TokenType::RIGHT_PAREN);
 
         this->consume(lexer::TokenType::SEMICOLON);
+
+        if (parser::Expr::hasTypeError(expr)) 
+        {
+            this->compiling.errors.emplace_back(parser::Expr::getTypeErrorMessage(peeked, expr));
+        }
 
         return printStmt;
     }
@@ -337,6 +334,30 @@ namespace parser
 
         return exprStmt;
     }
+
+    bool Expr::hasTypeError(std::shared_ptr<parser::Expr> expr)
+    {
+
+        if (expr->type == parser::ExprType::BINARY_OP)
+        {
+            std::shared_ptr<parser::BinaryOperation> binaryOp = std::static_pointer_cast<parser::BinaryOperation>(expr);
+
+            return binaryOp->left->returnType != binaryOp->right->returnType;
+        }
+
+        return false;
+    }
+
+    std::string Expr::getTypeErrorMessage(const lexer::Token& peeked, std::shared_ptr<parser::Expr> expr)
+    {
+        if (expr->type == parser::ExprType::BINARY_OP)
+        {
+            std::shared_ptr<parser::BinaryOperation> binaryOp = std::static_pointer_cast<parser::BinaryOperation>(expr);
+
+            return "Type Error: Expression at line " + std::to_string(peeked.getStart().getRow()) + ", column " + std::to_string(peeked.getStart().getColumn()) + " had " + parser::tostring(binaryOp->left->returnType) + " on left, " + parser::tostring(binaryOp->right->returnType) + " on right.";
+        }
+        return std::string("");
+    };
 
     std::string Parser::identifier()
     {
@@ -498,12 +519,6 @@ namespace parser
             binaryOperation->operation = this->parseOperation();
             binaryOperation->right = this->expr();
             binaryOperation->type = parser::ExprType::BINARY_OP;
-
-            // There should have been an error right here.
-            if (binaryOperation->left->returnType != binaryOperation->right->returnType)
-            {
-                throw parser::InvalidTypeException(rhsPeek, binaryOperation);
-            }
 
             if (lhs->returnType == parser::Type::STRING || binaryOperation->right->returnType == parser::Type::STRING)
             {

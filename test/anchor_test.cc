@@ -751,7 +751,6 @@ function integer main() {
     EXPECT_EQ(output, "23");
 }
 
-// This really should be a front end error?
 TEST(AnchorTest, ItShouldThrowCompileTimeErrorIfAddingStringAndIntTypes)
 {
     std::string sourceCode = R"(
@@ -766,7 +765,6 @@ function integer main() {
 
     return 0;
 };)";
-
     std::string llvmAnchor = anchor::compile(sourceCode);
-    EXPECT_EQ(llvmAnchor, "Expected: STRING at line 9, column 14, but found INTEGER.\n");
+    EXPECT_EQ(llvmAnchor, "Type Error: Expression at line 9, column 12 had STRING on left, INTEGER on right.\n");
 }
