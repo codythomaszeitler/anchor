@@ -54,6 +54,9 @@ namespace parser
     public:
         parser::ExprType type;
         parser::Type returnType;
+
+        static bool hasTypeError(std::shared_ptr<parser::Expr> expr);
+        static std::string getTypeErrorMessage(const lexer::Token&, std::shared_ptr<parser::Expr> expr);
     };
 
     class BooleanLiteralExpr : public Expr
