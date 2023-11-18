@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     {
         for (std::string line; std::getline(std::cin, line);)
         {
-            input += line;
+            input += line + '\n';
         }
     }
     else

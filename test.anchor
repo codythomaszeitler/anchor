@@ -1,8 +1,5 @@
-function integer foo() {
-    return 1;
-};
-
 function integer main() {
-    print(foo());
+    string a;
+    a = 3;
     return 0;
 };
