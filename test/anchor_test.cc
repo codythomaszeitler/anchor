@@ -16,7 +16,6 @@ std::string runAnchor(const std::string& llvmAnchor)
     testFile.close();
 
     std::string anchorRunCommand = "/usr/local/opt/llvm/bin/lli " + filename;
-    std::cout << anchorRunCommand << std::endl;
 
     char path[PATH_MAX];
     FILE *fp = popen(anchorRunCommand.c_str(), "r");
@@ -780,4 +779,18 @@ function integer main() {
 };)";
     std::string llvmAnchor = anchor::compile(sourceCode);
     EXPECT_EQ(llvmAnchor, "Type Error: Expression at line 5, column 5 had STRING on left, INTEGER on right.\n");
+}
+
+TEST(AnchorTest, ItShouldTypeCheckFunctionArgs) {
+
+    std::string sourceCode = R"(
+
+function integer main() {
+    string a;
+    a = 3;
+    return 0;
+};)";
+    std::string llvmAnchor = anchor::compile(sourceCode);
+    EXPECT_EQ(llvmAnchor, "Type Error: Expression at line 5, column 5 had STRING on left, INTEGER on right.\n");
+
 }
